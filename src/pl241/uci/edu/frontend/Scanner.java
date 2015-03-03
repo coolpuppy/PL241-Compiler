@@ -2,7 +2,6 @@ package pl241.uci.edu.frontend;
 
 
 import java.util.ArrayList;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 /*
@@ -14,22 +13,22 @@ public class Scanner {
     private Character curChar;
 
     //if we get a number, store it in val
-    public int val;
+    private int val;
 
     //this is the id of predefined function
-    public int id;
+    private int id;
 
-    public static ArrayList<String> preDefinedFunction; // keep current identIdx and List[existidents] to save space
+    //this is the list of identifiers
+    public static ArrayList<String> ident;
 
-    // Constructor: open file and scan the first token into 'inputSym'
-    public Scanner(String fileName) throws FileNotFoundException, IOException {
+    public Scanner(String fileName) throws IOException {
         fReader = new FileReader(fileName);
         curChar = null;
         id = -1;
-        preDefinedFunction = new ArrayList<String>();
-        preDefinedFunction.add("InputNum");
-        preDefinedFunction.add("OutputNum");
-        preDefinedFunction.add("OutputNewLine");;
+        ident = new ArrayList<String>();
+        ident.add("InputNum");
+        ident.add("OutputNum");
+        ident.add("OutputNewLine");
     }
 
     public void startScanner() throws IOException {
@@ -56,6 +55,7 @@ public class Scanner {
     public Token getNextToken() throws IOException {
         Token curToken = null;
         // Skip space and comment
+        // we may get a divide token by this method
         if ((curToken = skipSpaceAndComment()) != null)
             return curToken;
 
@@ -68,7 +68,7 @@ public class Scanner {
             return curToken;
 
         // Check if it is a letter token(including ident and keyword token)
-        if ((curToken = getLetterToken()) != null)
+        if ((curToken = getIdentToken()) != null)
             return curToken;
 
         // otherwise, other tokens
@@ -83,15 +83,14 @@ public class Scanner {
             case '*':
                 nextChar();
                 return Token.TIMES;
-            // if comparison, here pay attention to designator('<-')
+            // if comparison
             case '=':
                 nextChar();
                 if (curChar == '=') {
                     nextChar();
                     return Token.EQL;
                 } else {
-                    //error
-                    this.Error("Scanner Error!"+"\"=\" should be followed by \"=\"");
+                    this.Error("\"=\" should be followed by \"=\"");
                     return Token.ERROR;
                 }
             case '!':
@@ -100,8 +99,7 @@ public class Scanner {
                     nextChar();
                     return Token.NEQ;
                 } else {
-                    //error
-                    this.Error("Scanner Error!"+"\"!\" should be followed by \"=\"");
+                    this.Error("\"!\" should be followed by \"=\"");
                     return Token.ERROR;
                 }
             case '>':
@@ -123,7 +121,7 @@ public class Scanner {
                 } else {
                     return Token.LSS;
                 }
-                // if punctuation(. , ; :)
+            // if punctuation(. , ; :)
             case '.':
                 nextChar();
                 return Token.PERIOD;
@@ -167,7 +165,6 @@ public class Scanner {
      * new line: \n;
      * space: \b or ' ';
      * in PL241, both # and / are used for comments
-     * @throws IOException
      */
     public Token skipSpaceAndComment() throws IOException {
         while (curChar == '\t' || curChar == '\r' || curChar == '\n' || curChar == ' ' || curChar == '#' || curChar == '/') {
@@ -199,14 +196,18 @@ public class Scanner {
         return isNumber ? Token.NUMBER : null;
     }
 
-    public Token getLetterToken() throws IOException{
+    public Token getIdentToken() throws IOException{
         boolean isLetter = false;
         StringBuilder sb = null;
-        while (Character.isLetterOrDigit(curChar)) { // if letter or digit, ident or keyword
+        // if letter or digit, ident or keyword
+        while (Character.isLetterOrDigit(curChar)) {
             // The first letter should be a letter, actually digit is already filtered when
             // checking number token
-            if (!isLetter && Character.isDigit(curChar))
-                return null; // TODO maybe throw an exception here is a better choice
+            if (!isLetter && Character.isDigit(curChar)) {
+                this.Error("Invalid identifier");
+                return null;
+            }
+            //if it is not number,then an identifier
             isLetter = true;
             if (sb == null){
                 sb = new StringBuilder("");
@@ -219,23 +220,40 @@ public class Scanner {
         if (!isLetter) // no letter Token
             return null;
 
-        String candidate = sb.toString();
-        Token keywordToken = Token.buildToken(candidate);
-        if (keywordToken != null) // found in keyword library, so it's keyword token
-            return keywordToken;
+        String tokenString = sb.toString();
 
-        // otherwise, it's ident
-        if (!preDefinedFunction.contains(candidate))
-            preDefinedFunction.add(candidate);
-        this.id = preDefinedFunction.indexOf(candidate);
+        Token Keyword = buildKeyWord(tokenString);
+        if (Keyword != null)
+            return Keyword;
+
+        // otherwise, it's a identifier
+        // update the list
+        if (!ident.contains(tokenString))
+            ident.add(tokenString);
+        this.id = ident.indexOf(tokenString);
+
         return Token.IDENTIFIER;
     }
 
+    private Token buildKeyWord(String tokenString)
+    {
+        return Token.buildToken(tokenString);
+    }
+
+    public void Error(String errMsg) {
+        System.err.println("Scanner Error: Syntax error at " + fReader.getNumOfLine() + ": " + errMsg);
+    }
+
+    /**********************************get function**********************************/
     public int getLineNumber(){
         return fReader.getNumOfLine();
     }
 
-    public void Error(String errMsg) {
-        System.err.println("Scanner error: Syntax error at " + fReader.getNumOfLine() + ": " + errMsg);
+    public int getPreDefinedFunctionID(){
+        return this.id;
+    }
+
+    public int getVal() {
+        return this.val;
     }
 }
