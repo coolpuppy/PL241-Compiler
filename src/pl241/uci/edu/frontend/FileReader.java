@@ -19,11 +19,13 @@ public class FileReader {
         this.file=new File(path);
         buffer=new BufferedReader(new java.io.FileReader(file));
     }
+    
     public void openFile() throws IOException{
         line=buffer.readLine();
         numOfLine=1;
         charPosition=0;
     }
+
     public Character getCurrentChar(){
         if(charPosition>=line.length()){
             return '#';
@@ -33,6 +35,7 @@ public class FileReader {
         }
         return line.charAt(charPosition);
     }
+
     public Character getNextChar(){
         charPosition++;
         if(charPosition>=line.length()){
@@ -40,6 +43,7 @@ public class FileReader {
         }
         return line.charAt(charPosition);
     }
+
     public void getNextLine() throws IOException{
         line=buffer.readLine();
         if(line!=null) {
@@ -51,12 +55,15 @@ public class FileReader {
             }
         }
     }
+
     public void closeFile() throws IOException{
         buffer.close();
     }
+
     public int getNumOfLine(){
         return numOfLine;
     }
+
     public int getCharPosition(){
         return charPosition;
     }
