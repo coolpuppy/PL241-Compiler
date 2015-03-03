@@ -1,7 +1,7 @@
 package pl241.uci.edu.frontend;
 
-/**
- * Created by anthony on 3/2/15.
+/*
+Date:2015/03/02
  */
 import java.io.BufferedReader;
 import java.io.File;
