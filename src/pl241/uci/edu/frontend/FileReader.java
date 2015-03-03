@@ -19,7 +19,7 @@ public class FileReader {
         this.file=new File(path);
         buffer=new BufferedReader(new java.io.FileReader(file));
     }
-    
+
     public void openFile() throws IOException{
         line=buffer.readLine();
         numOfLine=1;
