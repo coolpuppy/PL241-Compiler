@@ -136,12 +136,12 @@ public class Instruction {
 
     public int getLeftAddress()
     {
-        return this.result1.address;
+        return this.result1.varAddress;
     }
 
     public int getRightAddress()
     {
-        return this.result2.address;
+        return this.result2.varAddress;
     }
 
     public Result getLeftResult()
@@ -223,22 +223,22 @@ public class Instruction {
 
     public boolean isMoveConstant()
     {
-        return this.op == InstructionType.MOVE && this.result1.kind == Result.Type.constant && this.result2.kind == Result.Type.var;
+        return this.op == InstructionType.MOVE && this.result1.type == Result.Type.constant && this.result2.type == Result.Type.variable;
     }
 
     public boolean isMoveInstruction()
     {
-        return this.op == InstructionType.MOVE && this.result1.kind == Result.Type.instr && this.result2.kind == Result.Type.var;
+        return this.op == InstructionType.MOVE && this.result1.type == Result.Type.instruction && this.result2.type == Result.Type.variable;
     }
 
     public boolean isMoveVar()
     {
-        return this.op == InstructionType.MOVE && this.result1.kind == Result.Type.var && this.result2.kind == Result.Type.var;
+        return this.op == InstructionType.MOVE && this.result1.type == Result.Type.variable && this.result2.type == Result.Type.variable;
     }
 
     public boolean isArithOrBranch()
     {
-        return (!(result1 == null || result2 == null)) && ArithOp.contains(op) || BranchOp.contains(op) && result1.kind == Result.Type.var && result2.kind == Result.Type.var;
+        return (!(result1 == null || result2 == null)) && ArithOp.contains(op) || BranchOp.contains(op) && result1.type == Result.Type.variable && result2.type == Result.Type.variable;
     }
 
     public String toString() {
@@ -262,12 +262,12 @@ public class Instruction {
             String var1;
             String var2;
             if (leftRepresentedByInstrId) {
-                var1 = "(" + this.getLeftResult().instrId + ")";
+                var1 = "(" + this.getLeftResult().instrRef + ")";
             } else{
                 var1 = this.variableName + "_" + s1.toString();
             }
             if(rightRepresentedByInstrId){
-                var2 = "(" + this.getRightResult().instrId + ")";
+                var2 = "(" + this.getRightResult().instrRef + ")";
             } else{
                 var2 = this.variableName + "_" + s2.toString();
             }

@@ -9,14 +9,14 @@ public class Result {
     public enum Type{
         constant, variable, register, condition, branch, instruction;
     }
-    private Type type;//result type
-    private int value;//value if constant
-    private int varAddress;//address if variable
-    private SSAValue ssaVersion;//ssa version if variable
-    private int regno;//register number if register
-    private int fixuplocation;
-    private BasicBlock branchBlock;
-    private int instrRef;
+    public Type type;//result type
+    public int value;//value if constant
+    public int varAddress;//address if variable
+    public SSAValue ssaVersion;//ssa version if variable
+    public int regno;//register number if register
+    public int fixuplocation;
+    public BasicBlock branchBlock;
+    public int instrRef;
 
     public Result(){
 
