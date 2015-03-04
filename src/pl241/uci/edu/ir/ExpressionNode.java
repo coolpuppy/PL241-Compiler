@@ -21,18 +21,18 @@ public class ExpressionNode {
 
     //set a hash code for each result
     //if result is a variable, then we return the hash value for its value
-    //if not, we return the hash value for its address and SSA reference ID
+    //if not, we return the hash value for its varAddress and SSA reference ID
     @Override
     public int hashCode() {
         int hashcode1;
         int hashcode2;
-        if(result1.kind == Result.Type.var)
-            hashcode1 =  result1.address * 17 + result1.ssa.hashCode() * 31;
+        if(result1.type == Result.Type.variable)
+            hashcode1 =  result1.varAddress * 17 + result1.ssaVersion.hashCode() * 31;
         else
             hashcode1 =  result1.value * 61;
 
-        if(result2.kind == Result.Type.var)
-            hashcode2 =  result2.address * 41 + result2.ssa.hashCode() * 59;
+        if(result2.type == Result.Type.variable)
+            hashcode2 =  result2.varAddress * 41 + result2.ssaVersion.hashCode() * 59;
         else
             hashcode2 =  result2.value * 61;
         return hashcode1 + hashcode2;
@@ -43,23 +43,23 @@ public class ExpressionNode {
     }
 
     public String toString(){
-        return result1.address + "_" + result1.ssa.getVersion() + " "
-                + result2.address + "_" + result2.ssa.getVersion();
+        return result1.varAddress + "_" + result1.ssaVersion.getVersion() + " "
+                + result2.varAddress + "_" + result2.ssaVersion.getVersion();
     }
 
     private boolean isEqualResult(Result temp1, Result temp2)
     {
-        if(temp1.kind != temp2.kind)
+        if(temp1.type != temp2.type)
             return false;
 
-        if(temp1.kind == Result.Type.var)
+        if(temp1.type == Result.Type.variable)
         {
-            if(temp1.address != temp2.address || !temp1.ssa.equals(temp2.ssa))
+            if(temp1.varAddress != temp2.varAddress || !temp1.ssaVersion.equals(temp2.ssaVersion))
                 return false;
         }
-        else if(temp1.kind == Result.Type.instr)
+        else if(temp1.type == Result.Type.instruction)
         {
-            if(temp1.instrId != temp2.instrId)
+            if(temp1.instrRef != temp2.instrRef)
                 return false;
         }
         else
