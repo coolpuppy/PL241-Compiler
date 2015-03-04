@@ -9,10 +9,17 @@ public class FunctionDecl {
     private int funcID;
 
     private BasicBlock firstFuncBlock;
+
+    //id of the local variable
     private ArrayList<Integer> localVariables;
+
+    //id of the global variable
     private ArrayList<Integer> globalVariables;
+
+    //function parameters
     private ArrayList<Result> parameters;
 
+    //return result of the function
     private Result returnInstr;
 
     public Function(int ID){
