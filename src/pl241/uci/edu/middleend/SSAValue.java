@@ -5,20 +5,20 @@ Data:2015/03/02
 This is used to store the reference ID of a value in SSA form.
  */
 public class SSAValue {
-    private int referenceID;
+    private int version;
 
-    public SSAValue(int id)
+    public SSAValue(int version)
     {
-        this.referenceID = id;
+        this.version = version;
     }
 
-    public int getID()
+    public int getVersion()
     {
-        return this.referenceID;
+        return this.version;
     }
 
-    public void changeID(int id)
+    public void changeVersion(int id)
     {
-        this.referenceID = id;
+        this.version = id;
     }
 }

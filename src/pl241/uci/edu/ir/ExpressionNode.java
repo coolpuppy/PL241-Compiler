@@ -43,8 +43,8 @@ public class ExpressionNode {
     }
 
     public String toString(){
-        return result1.address + "_" + result1.ssa.getID() + " "
-                + result2.address + "_" + result2.ssa.getID();
+        return result1.address + "_" + result1.ssa.getVersion() + " "
+                + result2.address + "_" + result2.ssa.getVersion();
     }
 
     private boolean isEqualResult(Result temp1, Result temp2)
