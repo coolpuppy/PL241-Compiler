@@ -10,10 +10,10 @@ import java.util.HashMap;
 public class DelUseChain {
 
     //this store all the use chains of left result of pre-SSA
-    public static HashMap<Instruction, ArrayList<Instruction>> xDefUseChains;
+    private HashMap<Instruction, ArrayList<Instruction>> xDefUseChains;
 
     //this store all the use chains of right result of pre-SSA
-    public static HashMap<Instruction, ArrayList<Instruction>> yDefUseChains;
+    private HashMap<Instruction, ArrayList<Instruction>> yDefUseChains;
 
     public DelUseChain()
     {
@@ -27,10 +27,10 @@ public class DelUseChain {
      * @param left ,left Result of a instruction
      * @param right,right Result of a instruction
      */
-    public static void updateDefUseChain(Result left, Result right) {
+    public void updateDefUseChain(Result left, Result right) {
         ArrayList<Instruction> useInstructions = null;
         Instruction curInstr = null;
-        if (left.type == Result.Type.variable) {
+        if (left.type == Result.ResultType.variable) {
             curInstr = ControlFlowGraph.allInstructions.get(left.instrRef);
             Instruction leftLastUse = ControlFlowGraph.allInstructions.get(left.ssaVersion.getVersion());
             if (xDefUseChains.containsKey(leftLastUse)) {
@@ -41,7 +41,7 @@ public class DelUseChain {
             }
             useInstructions.add(curInstr);
         }
-        if (right.type == Result.Type.variable) {
+        if (right.type == Result.ResultType.variable) {
             Instruction rightLastUse = ControlFlowGraph.allInstructions.get(right.ssaVersion.getVersion());
 
             if (yDefUseChains.containsKey(rightLastUse)) {
@@ -58,7 +58,7 @@ public class DelUseChain {
      * @param  ssaDef,reference SSA of a instruction
      * @param  use, instruction refers to a SSA value
      **/
-    public static void updateXDefUseChains(SSAValue ssaDef, Instruction use) {
+    public void updateXDefUseChains(SSAValue ssaDef, Instruction use) {
         updateXDefUseChains(ControlFlowGraph.allInstructions.get(ssaDef.getVersion()), use);
     }
 
@@ -66,11 +66,11 @@ public class DelUseChain {
      * @param ssaDef,reference SSA of a instruction
      * @param  use, instruction refers to a SSA value
      **/
-    public static void updateYDefUseChains(SSAValue ssaDef, Instruction use) {
+    public void updateYDefUseChains(SSAValue ssaDef, Instruction use) {
         updateYDefUseChains(ControlFlowGraph.allInstructions.get(ssaDef.getVersion()), use);
     }
 
-    public static void updateXDefUseChains(Instruction def, Instruction use) {
+    public void updateXDefUseChains(Instruction def, Instruction use) {
         ArrayList<Instruction> useInstructions = null;
         if (xDefUseChains.containsKey(def)) {
             useInstructions = xDefUseChains.get(def);
@@ -81,7 +81,7 @@ public class DelUseChain {
         useInstructions.add(use);
     }
 
-    public static void updateYDefUseChains(Instruction def, Instruction use) {
+    public void updateYDefUseChains(Instruction def, Instruction use) {
         ArrayList<Instruction> useInstructions = null;
         if (yDefUseChains.containsKey(def)) {
             useInstructions = yDefUseChains.get(def);

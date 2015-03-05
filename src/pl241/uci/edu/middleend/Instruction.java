@@ -157,10 +157,7 @@ public class Instruction {
         return this.s1;
     }
 
-    public SSAValue getRightValue()
-    {
-        return this.s2;
-    }
+    public SSAValue getRightSSA(){return this.s2;}
 
     /**********************************set function**********************************/
     public void setVariableName(String variableName)
@@ -203,6 +200,11 @@ public class Instruction {
         this.leftLatestUpdated = bool;
     }
 
+    public void setRightSSA(SSAValue s2){this.s2 = s2;}
+
+    public void setLeftSSA(SSAValue s1){this.s1 = s1;}
+
+
     /**********************************boolean function**********************************/
     public boolean isLeftLatestUpdated()
     {
@@ -221,22 +223,22 @@ public class Instruction {
 
     public boolean isMoveConstant()
     {
-        return this.op == InstructionType.MOVE && this.result1.type == Result.Type.constant && this.result2.type == Result.Type.variable;
+        return this.op == InstructionType.MOVE && this.result1.type == Result.ResultType.constant && this.result2.type == Result.ResultType.variable;
     }
 
     public boolean isMoveInstruction()
     {
-        return this.op == InstructionType.MOVE && this.result1.type == Result.Type.instruction && this.result2.type == Result.Type.variable;
+        return this.op == InstructionType.MOVE && this.result1.type == Result.ResultType.instruction && this.result2.type == Result.ResultType.variable;
     }
 
     public boolean isMoveVar()
     {
-        return this.op == InstructionType.MOVE && this.result1.type == Result.Type.variable && this.result2.type == Result.Type.variable;
+        return this.op == InstructionType.MOVE && this.result1.type == Result.ResultType.variable && this.result2.type == Result.ResultType.variable;
     }
 
     public boolean isArithOrBranch()
     {
-        return (!(result1 == null || result2 == null)) && ArithOp.contains(op) || BranchOp.contains(op) && result1.type == Result.Type.variable && result2.type == Result.Type.variable;
+        return (!(result1 == null || result2 == null)) && ArithOp.contains(op) || BranchOp.contains(op) && result1.type == Result.ResultType.variable && result2.type == Result.ResultType.variable;
     }
 
     public String toString() {
