@@ -8,10 +8,10 @@ Data:2015/03/02
 This is for the intermediate representation and store the variable in pre-SSA form.
  */
 public class Result {
-    public enum Type{
+    public enum ResultType{
         constant, variable, register, condition, branch, instruction;
     }
-    public Type type;//result type
+    public ResultType type;//result type
     public int value;//value if constant
     public int varAddress;//address if variable
     public SSAValue ssaVersion;//ssa version if variable
@@ -35,7 +35,7 @@ public class Result {
         this.instrRef=result.instrRef;
     }
 
-    public void buildResult(Type type,int inputValue){
+    public void buildResult(ResultType type,int inputValue){
         switch(type) {
             case constant:
                 this.type = type;
@@ -64,13 +64,13 @@ public class Result {
 
     public Result buildConstant(int value){
         Result result=new Result();
-        result.buildResult(Type.constant,value);
+        result.buildResult(ResultType.constant,value);
         return result;
     }
 
     public Result buildBranch(BasicBlock branchBlock){
         Result result=new Result();
-        result.type=Type.branch;
+        result.type=ResultType.branch;
         result.branchBlock=branchBlock;
         return result;
     }

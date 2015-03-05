@@ -165,9 +165,9 @@ public class BasicBlock {
         {
             Result left = ins.getLeftResult();
             Result right = ins.getRightResult();
-            if(left != null && left.type == Result.Type.variable && left.varAddress == address && left.ssaVersion.getVersion() == oldssa.getVersion())
+            if(left != null && left.type == Result.ResultType.variable && left.varAddress == address && left.ssaVersion.getVersion() == oldssa.getVersion())
                 ins.getLeftResult().setSSAVersion(oldssa.clone());
-            if(right != null && right.type == Result.Type.variable && right.varAddress == address && right.ssaVersion.getVersion() == oldssa.getVersion())
+            if(right != null && right.type == Result.ResultType.variable && right.varAddress == address && right.ssaVersion.getVersion() == oldssa.getVersion())
                 ins.getRightResult().setSSAVersion(oldssa.clone());
         }
     }
