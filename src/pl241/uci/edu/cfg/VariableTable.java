@@ -10,21 +10,21 @@ This class is used to store the hash map of global variable and SSA reference.
 */
 public class VariableTable {
     //store the address of global variables
-    private static HashSet<Integer> GlobalVariableAddress;
+    private static HashSet<Integer> GlobalVariableIdent;
 
     //store the SSA form variables which have the same address
     private static HashMap<Integer,ArrayList<SSAValue>> SSAUseChain;
 
     public VariableTable()
     {
-        GlobalVariableAddress = new HashSet<Integer>();
+        GlobalVariableIdent = new HashSet<Integer>();
 
         SSAUseChain = new HashMap<Integer,ArrayList<SSAValue>>();
     }
 
     public static void addGlobalVariable(int address)
     {
-        GlobalVariableAddress.add(address);
+        GlobalVariableIdent.add(address);
     }
 
     public static SSAValue getLatestVersion(int address)
@@ -63,7 +63,7 @@ public class VariableTable {
 
     public static HashSet<Integer> cloneGlobalVariableAddress()
     {
-        Iterator iter = GlobalVariableAddress.iterator();
+        Iterator iter = GlobalVariableIdent.iterator();
         HashSet<Integer> clone = new HashSet<Integer>();
         while(iter.hasNext())
             clone.add((Integer)iter.next());
@@ -72,12 +72,12 @@ public class VariableTable {
 
     public static HashSet<Integer> getGlobalVariableAddress()
     {
-        return GlobalVariableAddress;
+        return GlobalVariableIdent;
     }
 
     public static void setGlobalVariableAddress(HashSet<Integer> set)
     {
-        GlobalVariableAddress = set;
+        GlobalVariableIdent = set;
     }
 
     public static HashMap<Integer,ArrayList<SSAValue>> getSSAUseChain()

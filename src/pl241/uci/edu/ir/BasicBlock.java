@@ -31,14 +31,16 @@ public class BasicBlock {
     //use in while loop, link back to the condition block
     private BasicBlock backBlock;
 
+    private PhiFunctionGenerator phiFunctionGenerator;
+
+
     public BasicBlock(BlockType type)
     {
         this.type = type;
         ControlFlowGraph.getBlocks().add(this);
         this.id = ControlFlowGraph.getBlocks().size();
-
+        phiFunctionGenerator = new PhiFunctionGenerator();
         instructions = new ArrayList<Instruction>();
-
         followBlock = null;
         elseBlock = null;
         joinBlock = null;
@@ -179,6 +181,18 @@ public class BasicBlock {
 
 
 
+    /**********************************phi function**********************************/
+
+    public void createPhiFunction(int varIdent)
+    {
+        this.phiFunctionGenerator.addPhiFunction(varIdent,VariableTable.getLatestVersion(varIdent));
+    }
+
+    public void updatePhiFunction(int varIdent,SSAValue ssa,BlockType type)
+    {
+        this.phiFunctionGenerator.updatePhiFunction(varIdent,ssa,PhiFunctionUpdateType.getBlockPhiMap().get(type));
+    }
+
     private void Error(String msg)
     {
         System.out.println("BasicBlock Error! " + msg);
@@ -212,5 +226,12 @@ public class BasicBlock {
                 return ins;
         }
         return null;
+    }
+
+    public Instruction generateInstruction(InstructionType type,Result r1,Result r2)
+    {
+        Instruction newIns = new Instruction(type,r1 == null ? null:r1.deepClone(r1),r2 == null?null:r2.deepClone(r2));
+        this.instructions.add(newIns);
+        return newIns;
     }
 }
