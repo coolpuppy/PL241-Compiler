@@ -22,7 +22,7 @@ public class FunctionDecl {
     //return result of the function
     private Result returnInstr;
 
-    public Function(int ID){
+    public FunctionDecl(int ID){
         this.funcID= ID;
         firstFuncBlock = new BasicBlock(BlockType.NORMAL);
         localVariables = new ArrayList<Integer>();

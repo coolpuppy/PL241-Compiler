@@ -31,6 +31,8 @@ public class BasicBlock {
     //use in while loop, link back to the condition block
     private BasicBlock backBlock;
 
+    private PhiFunctionGenerator phiFunctionGenerator;
+
     public BasicBlock(BlockType type)
     {
         this.type = type;
@@ -212,5 +214,9 @@ public class BasicBlock {
                 return ins;
         }
         return null;
+    }
+
+    public PhiFunctionGenerator getPhiFunctionGenerator(){
+        return phiFunctionGenerator;
     }
 }
