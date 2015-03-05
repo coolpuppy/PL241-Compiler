@@ -146,7 +146,7 @@ public class BasicBlock {
             Instruction cond = findConditionInstruction(address);
             if(cond != null)
             {
-                if(cond.getLeftResult().varAddress == address)
+                if(cond.getLeftResult().varIdent == address)
                     cond.getLeftResult().setSSAVersion(newssa.clone());
                 else
                     cond.getRightResult().setSSAVersion(newssa.clone());
@@ -167,9 +167,9 @@ public class BasicBlock {
         {
             Result left = ins.getLeftResult();
             Result right = ins.getRightResult();
-            if(left != null && left.type == Result.ResultType.variable && left.varAddress == address && left.ssaVersion.getVersion() == oldssa.getVersion())
+            if(left != null && left.type == Result.ResultType.variable && left.varIdent == address && left.ssaVersion.getVersion() == oldssa.getVersion())
                 ins.getLeftResult().setSSAVersion(oldssa.clone());
-            if(right != null && right.type == Result.ResultType.variable && right.varAddress == address && right.ssaVersion.getVersion() == oldssa.getVersion())
+            if(right != null && right.type == Result.ResultType.variable && right.varIdent == address && right.ssaVersion.getVersion() == oldssa.getVersion())
                 ins.getRightResult().setSSAVersion(oldssa.clone());
         }
     }
@@ -195,7 +195,7 @@ public class BasicBlock {
     {
         for(Instruction ins : instructions)
         {
-            if(ins.getOp() == InstructionType.CMP && ins.getLeftResult().varAddress == address || ins.getRightResult().varAddress == address)
+            if(ins.getOp() == InstructionType.CMP && ins.getLeftResult().varIdent == address || ins.getRightResult().varIdent == address)
                 return ins;
         }
         Error("findConditionInstruction cannot find condition instruction with operand has address " + address + " ");

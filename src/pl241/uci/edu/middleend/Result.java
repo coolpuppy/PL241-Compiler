@@ -13,7 +13,7 @@ public class Result {
     }
     public ResultType type;//result type
     public int value;//value if constant
-    public int varAddress;//address if variable
+    public int varIdent;//address if variable
     public SSAValue ssaVersion;//ssa version if variable
     public int regno;//register number if register
     public int fixuplocation;
@@ -27,7 +27,7 @@ public class Result {
     public Result(Result result){
         this.type=result.type;
         this.value=result.value;
-        this.varAddress=result.varAddress;
+        this.varIdent=result.varIdent;
         this.ssaVersion=result.ssaVersion;
         this.regno=result.regno;
         this.fixuplocation=result.fixuplocation;
@@ -43,7 +43,7 @@ public class Result {
                 break;
             case variable:
                 this.type = type;
-                this.varAddress = inputValue;
+                this.varIdent = inputValue;
                 break;
             case register:
                 this.type = type;

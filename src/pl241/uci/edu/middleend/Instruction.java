@@ -134,12 +134,12 @@ public class Instruction {
 
     public int getLeftAddress()
     {
-        return this.result1.varAddress;
+        return this.result1.varIdent;
     }
 
     public int getRightAddress()
     {
-        return this.result2.varAddress;
+        return this.result2.varIdent;
     }
 
     public Result getLeftResult()

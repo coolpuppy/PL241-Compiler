@@ -27,12 +27,12 @@ public class ExpressionNode {
         int hashcode1;
         int hashcode2;
         if(result1.type == Result.ResultType.variable)
-            hashcode1 =  result1.varAddress * 17 + result1.ssaVersion.hashCode() * 31;
+            hashcode1 =  result1.varIdent * 17 + result1.ssaVersion.hashCode() * 31;
         else
             hashcode1 =  result1.value * 61;
 
         if(result2.type == Result.ResultType.variable)
-            hashcode2 =  result2.varAddress * 41 + result2.ssaVersion.hashCode() * 59;
+            hashcode2 =  result2.varIdent * 41 + result2.ssaVersion.hashCode() * 59;
         else
             hashcode2 =  result2.value * 61;
         return hashcode1 + hashcode2;
@@ -43,8 +43,8 @@ public class ExpressionNode {
     }
 
     public String toString(){
-        return result1.varAddress + "_" + result1.ssaVersion.getVersion() + " "
-                + result2.varAddress + "_" + result2.ssaVersion.getVersion();
+        return result1.varIdent + "_" + result1.ssaVersion.getVersion() + " "
+                + result2.varIdent + "_" + result2.ssaVersion.getVersion();
     }
 
     private boolean isEqualResult(Result temp1, Result temp2)
@@ -54,7 +54,7 @@ public class ExpressionNode {
 
         if(temp1.type == Result.ResultType.variable)
         {
-            if(temp1.varAddress != temp2.varAddress || !temp1.ssaVersion.equals(temp2.ssaVersion))
+            if(temp1.varIdent != temp2.varIdent || !temp1.ssaVersion.equals(temp2.ssaVersion))
                 return false;
         }
         else if(temp1.type == Result.ResultType.instruction)
