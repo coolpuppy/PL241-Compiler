@@ -108,8 +108,6 @@ public class Instruction {
 
     }
 
-
-
     /**********************************get function**********************************/
     public String getVariableName()
     {

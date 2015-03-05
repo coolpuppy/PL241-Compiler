@@ -21,4 +21,9 @@ public class SSAValue {
     {
         this.version = id;
     }
+
+    public SSAValue clone()
+    {
+        return new SSAValue(this.version);
+    }
 }
