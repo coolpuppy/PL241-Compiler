@@ -33,10 +33,6 @@ public class BasicBlock {
 
     private PhiFunctionGenerator phiFunctionGenerator;
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 606762b9a17cc00b847905c20361550d841e17a7
     public BasicBlock(BlockType type)
     {
         this.type = type;
@@ -231,15 +227,13 @@ public class BasicBlock {
         return null;
     }
 
-<<<<<<< HEAD
-    public Instruction generateInstruction(InstructionType type,Result r1,Result r2)
-    {
-        Instruction newIns = new Instruction(type,r1 == null ? null:r1.deepClone(r1),r2 == null?null:r2.deepClone(r2));
+    public Instruction generateInstruction(InstructionType type,Result r1,Result r2) {
+        Instruction newIns = new Instruction(type, r1 == null ? null : r1.deepClone(r1), r2 == null ? null : r2.deepClone(r2));
         this.instructions.add(newIns);
         return newIns;
-=======
+    }
+
     public PhiFunctionGenerator getPhiFunctionGenerator(){
         return phiFunctionGenerator;
->>>>>>> 606762b9a17cc00b847905c20361550d841e17a7
     }
 }
