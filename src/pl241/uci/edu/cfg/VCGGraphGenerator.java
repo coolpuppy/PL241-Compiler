@@ -62,7 +62,7 @@ public class VCGGraphGenerator {
         writer.println("node: {");
         writer.println("title: \"" + block.getId() + "\"");
         writer.println("label: \"" + block.getId() + "[");
-        for(Map.Entry<Integer, Instruction> entry : block.getPhiFuncManager().getPhiFuncs().entrySet()){
+        for(Map.Entry<Integer, Instruction> entry : block.getPhiFunctionGenerator().getPhiInstructionMap().entrySet()){
             String var = Scanner.ident.get(entry.getKey());
             Instruction instr = entry.getValue();
             instr.setVariableName(var);
@@ -95,7 +95,7 @@ public class VCGGraphGenerator {
         writer.println("node: {");
         writer.println("title: \"" + node.block.getId() + "\"");
         writer.println("label: \"" + node.block.getId() + "[");
-        for(Map.Entry<Integer, Instruction> entry : node.block.getPhiFuncManager().getPhiFuncs().entrySet()){
+        for(Map.Entry<Integer, Instruction> entry : node.block.getPhiFunctionGenerator().getPhiInstructionMap().entrySet()){
             String var = Scanner.ident.get(entry.getKey());
             Instruction instr = entry.getValue();
             instr.setVariableName(var);

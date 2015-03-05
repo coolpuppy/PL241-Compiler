@@ -33,7 +33,10 @@ public class BasicBlock {
 
     private PhiFunctionGenerator phiFunctionGenerator;
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 606762b9a17cc00b847905c20361550d841e17a7
     public BasicBlock(BlockType type)
     {
         this.type = type;
@@ -146,7 +149,7 @@ public class BasicBlock {
             Instruction cond = findConditionInstruction(address);
             if(cond != null)
             {
-                if(cond.getLeftResult().varAddress == address)
+                if(cond.getLeftResult().varIdent == address)
                     cond.getLeftResult().setSSAVersion(newssa.clone());
                 else
                     cond.getRightResult().setSSAVersion(newssa.clone());
@@ -167,9 +170,9 @@ public class BasicBlock {
         {
             Result left = ins.getLeftResult();
             Result right = ins.getRightResult();
-            if(left != null && left.type == Result.ResultType.variable && left.varAddress == address && left.ssaVersion.getVersion() == oldssa.getVersion())
+            if(left != null && left.type == Result.ResultType.variable && left.varIdent == address && left.ssaVersion.getVersion() == oldssa.getVersion())
                 ins.getLeftResult().setSSAVersion(oldssa.clone());
-            if(right != null && right.type == Result.ResultType.variable && right.varAddress == address && right.ssaVersion.getVersion() == oldssa.getVersion())
+            if(right != null && right.type == Result.ResultType.variable && right.varIdent == address && right.ssaVersion.getVersion() == oldssa.getVersion())
                 ins.getRightResult().setSSAVersion(oldssa.clone());
         }
     }
@@ -207,7 +210,7 @@ public class BasicBlock {
     {
         for(Instruction ins : instructions)
         {
-            if(ins.getOp() == InstructionType.CMP && ins.getLeftResult().varAddress == address || ins.getRightResult().varAddress == address)
+            if(ins.getOp() == InstructionType.CMP && ins.getLeftResult().varIdent == address || ins.getRightResult().varIdent == address)
                 return ins;
         }
         Error("findConditionInstruction cannot find condition instruction with operand has address " + address + " ");
@@ -228,10 +231,15 @@ public class BasicBlock {
         return null;
     }
 
+<<<<<<< HEAD
     public Instruction generateInstruction(InstructionType type,Result r1,Result r2)
     {
         Instruction newIns = new Instruction(type,r1 == null ? null:r1.deepClone(r1),r2 == null?null:r2.deepClone(r2));
         this.instructions.add(newIns);
         return newIns;
+=======
+    public PhiFunctionGenerator getPhiFunctionGenerator(){
+        return phiFunctionGenerator;
+>>>>>>> 606762b9a17cc00b847905c20361550d841e17a7
     }
 }

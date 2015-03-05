@@ -61,6 +61,10 @@ public class PhiFunctionGenerator {
         }
     }
 
+    public HashMap<Integer,Instruction> getPhiInstructionMap(){
+        return phiInstructionMap;
+    }
+
     private void Error(String msg)
     {
         System.out.println("PhiFunctionGenerator Error! " + msg);
