@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import pl241.uci.edu.cfg.ControlFlowGraph;
 import pl241.uci.edu.cfg.DelUseChain;
+import pl241.uci.edu.cfg.IntermediateCodeGenerator;
 import pl241.uci.edu.cfg.VariableTable;
 import pl241.uci.edu.ir.BasicBlock;
 import pl241.uci.edu.middleend.Instruction;
@@ -48,8 +49,11 @@ public class Parser {
 
     private Token curToken;
 
+    private IntermediateCodeGenerator ICGenerator;
+
     public Parser (String path)throws IOException{
         scanner=new Scanner(path);
+        ICGenerator=new IntermediateCodeGenerator();
         new ControlFlowGraph();
     }
 
@@ -122,6 +126,7 @@ public class Parser {
             Result y=factor(curBlock);
             x.instrRef= Instruction.getPc();
             ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
+            ICGenerator.generateArithmeticIC(curBlock,operator,x,y);
         }
         return x;
     }
@@ -135,6 +140,7 @@ public class Parser {
             Result y=term(curBlock);
             x.instrRef=Instruction.getPc();
             ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
+            ICGenerator.generateArithmeticIC(curBlock,operator,x,y);
         }
         return x;
     }
@@ -147,6 +153,7 @@ public class Parser {
             Token relOp=curToken;
             Next();
             Result y=expression(curBlock);
+            ICGenerator.generateCMPIC(curBlock,x,y);
             relation=new Result();
             relation.relOp=relOp;
             relation.type= Result.ResultType.condition;

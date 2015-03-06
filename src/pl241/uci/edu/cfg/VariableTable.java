@@ -22,34 +22,34 @@ public class VariableTable {
         SSAUseChain = new HashMap<Integer,ArrayList<SSAValue>>();
     }
 
-    public static void addGlobalVariable(int address)
+    public static void addGlobalVariable(int varIdent)
     {
-        GlobalVariableIdent.add(address);
+        GlobalVariableIdent.add(varIdent);
     }
 
-    public static SSAValue getLatestVersion(int address)
+    public static SSAValue getLatestVersion(int varIdent)
     {
-        if(!SSAUseChain.containsKey(address))
+        if(!SSAUseChain.containsKey(varIdent))
         {
-            Error("Cannot find address " + address + " ! get latest version of SSA failed!");
+            Error("Cannot find address " + varIdent + " ! get latest version of SSA failed!");
             return null;
         }
         else
-            return SSAUseChain.get(address).get(SSAUseChain.get(address).size()-1);
+            return SSAUseChain.get(varIdent).get(SSAUseChain.get(varIdent).size()-1);
     }
 
-    public static void addSSAUseChain(int address,int version)
+    public static void addSSAUseChain(int varIdent,int version)
     {
-        if(!SSAUseChain.containsKey(address))
-            SSAUseChain.put(address,new ArrayList<SSAValue>());
-        SSAUseChain.get(address).add(new SSAValue(version));
+        if(!SSAUseChain.containsKey(varIdent))
+            SSAUseChain.put(varIdent,new ArrayList<SSAValue>());
+        SSAUseChain.get(varIdent).add(new SSAValue(version));
     }
 
-    public static void addSSAUseChain(int address,SSAValue ssa)
+    public static void addSSAUseChain(int varIdent,SSAValue ssa)
     {
-        if(!SSAUseChain.containsKey(address))
-            SSAUseChain.put(address, new ArrayList<SSAValue>());
-        SSAUseChain.get(address).add(ssa);
+        if(!SSAUseChain.containsKey(varIdent))
+            SSAUseChain.put(varIdent, new ArrayList<SSAValue>());
+        SSAUseChain.get(varIdent).add(ssa);
     }
 
     public static HashMap<Integer,ArrayList<SSAValue>> cloneSSAUseChain()
@@ -70,12 +70,12 @@ public class VariableTable {
         return clone;
     }
 
-    public static HashSet<Integer> getGlobalVariableAddress()
+    public static HashSet<Integer> getGlobalVariableIdent()
     {
         return GlobalVariableIdent;
     }
 
-    public static void setGlobalVariableAddress(HashSet<Integer> set)
+    public static void setGlobalVariableIdent(HashSet<Integer> set)
     {
         GlobalVariableIdent = set;
     }

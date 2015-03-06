@@ -146,9 +146,9 @@ public class BasicBlock {
             if(cond != null)
             {
                 if(cond.getLeftResult().varIdent == address)
-                    cond.getLeftResult().setSSAVersion(newssa.clone());
+                    cond.getLeftResult().setSSAVersion(newssa.getVersion());
                 else
-                    cond.getRightResult().setSSAVersion(newssa.clone());
+                    cond.getRightResult().setSSAVersion(newssa.getVersion());
             }
         }
     }
@@ -167,9 +167,9 @@ public class BasicBlock {
             Result left = ins.getLeftResult();
             Result right = ins.getRightResult();
             if(left != null && left.type == Result.ResultType.variable && left.varIdent == address && left.ssaVersion.getVersion() == oldssa.getVersion())
-                ins.getLeftResult().setSSAVersion(oldssa.clone());
+                ins.getLeftResult().setSSAVersion(oldssa.getVersion());
             if(right != null && right.type == Result.ResultType.variable && right.varIdent == address && right.ssaVersion.getVersion() == oldssa.getVersion())
-                ins.getRightResult().setSSAVersion(oldssa.clone());
+                ins.getRightResult().setSSAVersion(oldssa.getVersion());
         }
     }
 

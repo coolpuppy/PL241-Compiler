@@ -65,16 +65,17 @@ public class Result {
         this.ssaVersion=new SSAValue(inputSSAVersion);
     }
 
-    public Result buildConstant(int value){
-        Result result=new Result();
-        result.buildResult(ResultType.constant,value);
-        return result;
-    }
-
-    public Result buildBranch(BasicBlock branchBlock){
+    public static Result buildBranch(BasicBlock branchBlock){
         Result result=new Result();
         result.type=ResultType.branch;
         result.branchBlock=branchBlock;
+        return result;
+    }
+
+    public static Result buildConstant(int value){
+        Result result=new Result();
+        result.type=ResultType.constant;
+        result.value=value;
         return result;
     }
 
