@@ -2,6 +2,7 @@ package pl241.uci.edu.middleend;
 
 import pl241.uci.edu.frontend.Scanner;
 import pl241.uci.edu.ir.BasicBlock;
+import pl241.uci.edu.frontend.Token;
 
 /*
 Data:2015/03/02
@@ -17,6 +18,7 @@ public class Result {
     public SSAValue ssaVersion;//ssa version if variable
     public int regno;//register number if register
     public int fixuplocation;
+    public Token relOp;
     public BasicBlock branchBlock;
     public int instrRef;
 
@@ -31,6 +33,7 @@ public class Result {
         this.ssaVersion=result.ssaVersion;
         this.regno=result.regno;
         this.fixuplocation=result.fixuplocation;
+        this.relOp=result.relOp;
         this.branchBlock=result.branchBlock;
         this.instrRef=result.instrRef;
     }
@@ -58,8 +61,8 @@ public class Result {
         }
     }
 
-    public void setSSAVersion(SSAValue inputSSAVersion){
-        this.ssaVersion=inputSSAVersion;
+    public void setSSAVersion(int inputSSAVersion){
+        this.ssaVersion=new SSAValue(inputSSAVersion);
     }
 
     public Result buildConstant(int value){

@@ -15,7 +15,7 @@ public class Scanner {
     //if we get a number, store it in val
     private int val;
 
-    //this is the id of predefined function
+    //this is the id of variable
     private int id;
 
     //this is the list of identifiers
@@ -249,7 +249,7 @@ public class Scanner {
         return fReader.getNumOfLine();
     }
 
-    public int getPreDefinedFunctionID(){
+    public int getVarIdent(){
         return this.id;
     }
 
