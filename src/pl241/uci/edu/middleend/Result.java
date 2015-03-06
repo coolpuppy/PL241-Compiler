@@ -77,4 +77,9 @@ public class Result {
         result.branchBlock=branchBlock;
         return result;
     }
+
+    public Result deepClone(Result r)
+    {
+        return new Result(r);
+    }
 }

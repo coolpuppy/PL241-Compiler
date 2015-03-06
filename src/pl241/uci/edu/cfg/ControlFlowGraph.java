@@ -46,13 +46,24 @@ public class ControlFlowGraph {
         return blocks;
     }
 
-    public static Instruction getInstruction(int index)
+    public static Instruction getInstruction(int pc)
     {
+        for(BasicBlock block : blocks)
+        {
+            if(block.findInstruction(pc) != null)
+                return block.findInstruction(pc);
+        }
+        Error("cannot find the instruction with pc = " + pc);
         return null;
     }
 
     public static void printInstruction()
     {
 
+    }
+
+    private static void Error(String msg)
+    {
+        System.out.println("ControlFlowGraph Error! " + msg);
     }
 }
