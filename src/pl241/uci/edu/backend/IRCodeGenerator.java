@@ -1,19 +1,96 @@
 package pl241.uci.edu.backend;
 
 import pl241.uci.edu.cfg.ControlFlowGraph;
+import pl241.uci.edu.cfg.VariableTable;
+import pl241.uci.edu.frontend.Token;
 import pl241.uci.edu.ir.BasicBlock;
+import pl241.uci.edu.ir.FunctionDecl;
+import pl241.uci.edu.middleend.Instruction;
+import pl241.uci.edu.middleend.InstructionType;
 import pl241.uci.edu.middleend.Result;
+import pl241.uci.edu.optimizer.RegisterAllocation;
+
+import java.util.HashMap;
 
 /*
 Date:2015/03/05
 This class is used to generate the intermediate representation code, which is in the form of Instruction with pre-SSA result as operand.
  */
 public class IRCodeGenerator {
-    private CodeTable codeTable;
 
-    public IRCodeGenerator()
-    {
-        codeTable = new CodeTable();
+    private CodeTable codeTable;
+    private RegisterAllocation registerAllocation;
+
+    public IRCodeGenerator() {
+        this.registerAllocation=new RegisterAllocation();
+        this.codeTable = new CodeTable();
+    }
+
+    public void generateArithmeticIC(BasicBlock curBlock,Token curToken,Result x, Result y){
+        if(x.type== Result.ResultType.constant&&y.type== Result.ResultType.constant){
+            switch(codeTable.arithmeticCode.get(curToken)){
+                case ADD:
+                    x.value=x.value+y.value;
+                    break;
+                case SUB:
+                    x.value=x.value-y.value;
+                    break;
+                case MUL:
+                    x.value=x.value*y.value;
+                    break;
+                case DIV:
+                    x.value=x.value/y.value;
+                    break;
+            }
+        }
+        else{
+            //if y is not constant, deallocate y from registers.
+            if(y.type==Result.ResultType.constant){
+                curBlock.generateInstruction(codeTable.arithmeticCode.get(curToken),x,y);
+            }
+            else{
+                curBlock.generateInstruction(codeTable.arithmeticCode.get(curToken),x,y);
+                //TODO: DEALLOCATE Y
+            }
+        }
+    }
+
+    public void generateCMPIC(BasicBlock curBlock,Result x,Result y){
+        curBlock.generateInstruction(InstructionType.CMP,x,y);
+    }
+
+    public void generateIOIC(BasicBlock curBlock,int ioType,Result x){
+        curBlock.generateInstruction(codeTable.predifinedFuncCode.get(ioType),x,null);
+    }
+
+    public void generateVarDeclIC(BasicBlock curBlock,Result x,FunctionDecl function){
+        int varIdent=x.varIdent;
+        x.setSSAVersion(Instruction.getPc());
+        VariableTable.addSSAUseChain(x.varIdent, x.ssaVersion);
+        if(function!=null){
+            function.addLocalVariable(x.varIdent);
+        }
+        else{
+            VariableTable.addGlobalVariable(x.varIdent);
+        }
+        Result zeroConstant=Result.buildConstant(0);
+        curBlock.generateInstruction(InstructionType.MOVE,zeroConstant,x);
+    }
+
+    public void assignmentIC(BasicBlock curBlock,BasicBlock joinBlock,Result variable,Result value){
+        variable.setSSAVersion(Instruction.getPc());
+        VariableTable.addSSAUseChain(variable.varIdent,variable.ssaVersion);
+        curBlock.generateInstruction(InstructionType.MOVE,value,variable);
+        if(joinBlock!=null){
+            joinBlock.updatePhiFunction(variable.varIdent,variable.ssaVersion,curBlock.getType());
+        }
+    }
+
+    public void returnStateIC(BasicBlock curBlock,Result variable,FunctionDecl function){
+        Result returnInstr=new Result();
+        returnInstr.buildResult(Result.ResultType.instruction,Instruction.getPc());
+        curBlock.generateInstruction(InstructionType.MOVE,variable,returnInstr);
+        function.setReturnInstr(returnInstr);
     }
 
     public void load(Result x)
