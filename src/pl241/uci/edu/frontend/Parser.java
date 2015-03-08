@@ -3,6 +3,7 @@ package pl241.uci.edu.frontend;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Stack;
 
 import pl241.uci.edu.cfg.ControlFlowGraph;
 import pl241.uci.edu.cfg.DelUseChain;
@@ -165,13 +166,40 @@ public class Parser {
         return relation;
     }
 
-    private Result assignment(){
-
+    //assignment = “let” designator “<-” expression.
+    private void assignment(BasicBlock curBlock,Stack<BasicBlock> joinBlocks) throws IOException,Error{
+        if(curToken==Token.LET){
+            Next();
+            Result variable=designator(curBlock);
+            if(joinBlocks!=null&&joinBlocks.size()>0){
+                joinBlocks.peek().createPhiFunction(variable.varIdent);
+            }
+            if(curToken==Token.BECOMETO){
+                Next();
+                Result value=expression(curBlock);
+                if(joinBlocks!=null){
+                    irCodeGenerator.assignmentIC(curBlock,joinBlocks.peek(),variable,value);
+                }
+                else{
+                    irCodeGenerator.assignmentIC(curBlock,null,variable,value);
+                }
+            }
+            else{
+                Error("wrong assignment, expect '<-'!");
+            }
+        }
+        else{
+            Error("wrong assignment, expect 'let'!");
+        }
     }
+
 
     private Result funcCall(){return null;}
 
-    private BasicBlock ifStatement(){return null;}
+    //ifStatement = “if” relation “then” statSequence [ “else” statSequence ] “fi”.
+    private BasicBlock ifStatement(BasicBlock curBlock,Stack<BasicBlock> joinBlocks){
+        return null;
+    }
 
     private BasicBlock whileStatement(){return null;}
 
