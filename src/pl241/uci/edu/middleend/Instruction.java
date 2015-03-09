@@ -5,6 +5,8 @@ Date:2015/03/03
 This is used to store the instruction in pre-SSA form and SSA form. We use Result in pre-SSA form and SSAValue in SSA form.
  */
 
+import pl241.uci.edu.cfg.ControlFlowGraph;
+
 import java.util.ArrayList;
 
 public class Instruction {
@@ -13,7 +15,7 @@ public class Instruction {
     //PHI for the phi instruction
     //NORMAL for the other instructions
     public enum State{
-        ELIMINATED,
+        REPLACE,
         PHI,
         NORMAL
     }
@@ -91,7 +93,7 @@ public class Instruction {
         this.state = State.NORMAL;
 
         //TODO:add instruction to control flow graph
-
+        ControlFlowGraph.allInstructions.add(this);
     }
 
     public Instruction(InstructionType op,SSAValue s1, SSAValue s2)
@@ -105,7 +107,7 @@ public class Instruction {
         this.state = State.PHI;
 
         //TODO:add instruction to control flow graph
-
+        ControlFlowGraph.allInstructions.add(this);
     }
 
     /**********************************get function**********************************/
@@ -204,6 +206,8 @@ public class Instruction {
 
     public void setLeftSSA(SSAValue s1){this.s1 = s1;}
 
+    public void setState(Instruction.State state) {this.state = state;}
+
 
     /**********************************boolean function**********************************/
     public boolean isLeftLatestUpdated()
@@ -245,7 +249,7 @@ public class Instruction {
         StringBuilder sb = new StringBuilder("");
         sb.append(instructionPC + ": ");
 
-        if(this.state == State.ELIMINATED){
+        if(this.state == State.REPLACE){
             sb.append(" (" + referenceInstrId + ")");
             return sb.toString();
         }

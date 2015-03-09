@@ -236,4 +236,15 @@ public class BasicBlock {
     public PhiFunctionGenerator getPhiFunctionGenerator(){
         return phiFunctionGenerator;
     }
+
+    //get the instruction which is the next instruction of this one
+    public Instruction getNextIntruction(Instruction ins)
+    {
+        for(int i = 0; i< this.instructions.size()-1;i++)
+        {
+            if(this.instructions.get(i) == ins)
+                return this.instructions.get(i+1);
+        }
+        return null;
+    }
 }

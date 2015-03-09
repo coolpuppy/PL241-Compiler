@@ -8,7 +8,7 @@ import pl241.uci.edu.frontend.Token;
 Data:2015/03/02
 This is for the intermediate representation and store the variable in pre-SSA form.
  */
-public class Result {
+public class Result implements Comparable<Result>{
     public enum ResultType{
         constant, variable, register, condition, branch, instruction;
     }
@@ -82,5 +82,36 @@ public class Result {
     public Result deepClone(Result r)
     {
         return new Result(r);
+    }
+
+    @Override
+    public int compareTo(Result other) {
+        if(this.type != ResultType.variable || other.type != ResultType.variable)
+            try {
+                throw new Exception("Only can compare var result!");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        if(this.varIdent== other.varIdent && this.ssaVersion == other.ssaVersion)
+            return 0;
+        return -1;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.varIdent * 17 + this.ssaVersion.hashCode() * 31;
+    }
+
+    public boolean equals(Object other){
+        Result other2 = (Result)other;
+        if(this.type != ResultType.variable || other2.type != ResultType.variable)
+            try {
+                throw new Exception("Only can compare var result!");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        if(this.varIdent == other2.varIdent && this.ssaVersion == other2.ssaVersion)
+            return true;
+        return false;
     }
 }
