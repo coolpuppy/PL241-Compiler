@@ -203,9 +203,27 @@ public class Parser {
 
     private BasicBlock whileStatement(){return null;}
 
-    private BasicBlock statement(){return null;}
+    //statement = assignment | funcCall | ifStatement | whileStatement | returnStatement.
+    private BasicBlock statement(BasicBlock curBlock,Stack<BasicBlock> joinBlocks) throws IOException,Error{
+        if(curToken==Token.LET){
+            assignment(curBlock,joinBlocks);
+            return curBlock;
+        }
+        else{
+            Error("invalid statement!");
+            return null;
+        }
+    }
 
-    private BasicBlock stateSequence(){return null;}
+    //statSequence = statement { “;” statement }.
+    private BasicBlock stateSequence(BasicBlock curBlock,Stack<BasicBlock> joinBlocks) throws IOException,Error{
+        BasicBlock nextBlock=statement(curBlock,joinBlocks);
+        if(curToken==Token.SEMICOMA){
+            Next();
+            nextBlock=statement(nextBlock,joinBlocks);
+        }
+        return nextBlock;
+    }
 
     private Result typeDecl(){return null;}
 
@@ -217,6 +235,7 @@ public class Parser {
 
     private Result funcBody(){return null;}
 
+    //computation = “main” { varDecl } { funcDecl } “{” statSequence “}” “.” .
     public void computation(){}
 
     private void Next() throws IOException{
