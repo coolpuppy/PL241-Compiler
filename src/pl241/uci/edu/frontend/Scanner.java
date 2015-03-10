@@ -256,4 +256,6 @@ public class Scanner {
     public int getVal() {
         return this.val;
     }
+
+    public int getID(){return this.id;}
 }
