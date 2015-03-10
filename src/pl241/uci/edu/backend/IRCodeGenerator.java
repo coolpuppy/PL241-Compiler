@@ -59,8 +59,8 @@ public class IRCodeGenerator {
         curBlock.generateInstruction(InstructionType.CMP,x,y);
     }
 
-    public void generateIOIC(BasicBlock curBlock,int ioType,Result x){
-        curBlock.generateInstruction(codeTable.predifinedFuncCode.get(ioType),x,null);
+    public Instruction generateIOIC(BasicBlock curBlock,int ioType,Result x){
+        return curBlock.generateInstruction(codeTable.predifinedFuncCode.get(ioType),x,null);
     }
 
     public void generateVarDeclIC(BasicBlock curBlock,Result x,FunctionDecl function){
@@ -75,6 +75,15 @@ public class IRCodeGenerator {
         }
         Result zeroConstant=Result.buildConstant(0);
         curBlock.generateInstruction(InstructionType.MOVE,zeroConstant,x);
+    }
+
+    public void generateReturnOp(BasicBlock curBlock,Result x,FunctionDecl function)
+    {
+    }
+
+    public void generateASSIGNMENTIC(BasicBlock curBlock,Result x,Result parameter)
+    {
+        curBlock.generateInstruction(InstructionType.MOVE,x,parameter);
     }
 
     public void assignmentIC(BasicBlock curBlock,BasicBlock joinBlock,Result variable,Result value){

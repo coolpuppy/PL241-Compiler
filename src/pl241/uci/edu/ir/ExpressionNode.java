@@ -2,7 +2,6 @@ package pl241.uci.edu.ir;
 
 
 import pl241.uci.edu.middleend.Result;
-import sun.jvm.hotspot.runtime.ResultTypeFinder;
 
 /*
 Data:2015/03/03
