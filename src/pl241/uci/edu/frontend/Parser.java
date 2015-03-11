@@ -5,15 +5,17 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Stack;
 
-import pl241.uci.edu.cfg.ControlFlowGraph;
-import pl241.uci.edu.cfg.DelUseChain;
+import pl241.uci.edu.cfg.*;
 import pl241.uci.edu.backend.IRCodeGenerator;
-import pl241.uci.edu.cfg.VariableTable;
 import pl241.uci.edu.ir.BasicBlock;
+import pl241.uci.edu.ir.DominatorTreeNode;
 import pl241.uci.edu.ir.FunctionDecl;
 import pl241.uci.edu.middleend.Instruction;
 import pl241.uci.edu.middleend.InstructionType;
 import pl241.uci.edu.middleend.Result;
+import pl241.uci.edu.optimizer.CP;
+import pl241.uci.edu.optimizer.CSE;
+import pl241.uci.edu.optimizer.RegisterAllocation;
 import sun.org.mozilla.javascript.internal.Function;
 
 /*
@@ -634,6 +636,25 @@ public class Parser {
         Parser p = new Parser("src/test/test003.txt");
         p.parser();
         ControlFlowGraph.printInstruction();
-        System.exit(0);
+
+        VCGGraphGenerator vcg = new VCGGraphGenerator("test003");
+        //vcg.printCFG();
+
+        DominatorTreeGenerator dt = new DominatorTreeGenerator();
+        dt.buildDominatorTree();
+
+        //vcg.printDominantTree();
+
+        CP cp = new CP();
+        cp.CPoptimize(DominatorTreeGenerator.root);
+        //vcg.printDominantTree();
+
+//        CSE cse = new CSE();
+//        cse.CSEoptimize(DominatorTreeGenerator.root);
+//        vcg.printDominantTree();
+
+        RegisterAllocation ra = new RegisterAllocation();
+        ra.optimize(ControlFlowGraph.getFirstBlock());
+        vcg.printCFG();
     }
 }

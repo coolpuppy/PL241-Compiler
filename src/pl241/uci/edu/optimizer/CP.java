@@ -18,7 +18,7 @@ public class CP {
 
     public void CPoptimize(DominatorTreeNode root)
     {
-
+        CPoptimizeRecursion(root,new HashMap<Result, Integer>(),new HashMap<Result, Integer>());
     }
 
     public void CPoptimizeRecursion(DominatorTreeNode root,HashMap<Result,Integer>ResultTOInstruction,HashMap<Result,Integer>ResultTOConstant)
