@@ -77,8 +77,13 @@ public class IRCodeGenerator {
         curBlock.generateInstruction(InstructionType.MOVE,zeroConstant,x);
     }
 
-    public void generateReturnOp(BasicBlock curBlock,Result x,FunctionDecl function)
+    public void generateReturnIC(BasicBlock curBlock,Result x,FunctionDecl function)
     {
+        Result curIns = new Result();
+        curIns.buildResult(Result.ResultType.instruction,Instruction.getPc());
+        curBlock.generateInstruction(InstructionType.MOVE,x,curIns);
+        //set the function's return result
+        function.setReturnInstr(curIns);
     }
 
     public void generateASSIGNMENTIC(BasicBlock curBlock,Result x,Result parameter)

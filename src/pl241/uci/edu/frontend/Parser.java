@@ -135,6 +135,7 @@ public class Parser {
         while(curToken==Token.TIMES||curToken==Token.DIVIDE){
             Token operator=curToken;
             Next();
+            x.isMove = false;
             Result y=factor(curBlock,joinBlocks);
             x.instrRef= Instruction.getPc();
             ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
@@ -147,6 +148,8 @@ public class Parser {
     private Result expression(BasicBlock curBlock,Stack<BasicBlock>joinBlocks) throws IOException,Error{
         Result x=term(curBlock,joinBlocks);
         while(curToken==Token.PLUS||curToken==Token.MINUS){
+            //we are not doing move,wo assign a expression
+            x.isMove = false;
             Token operator=curToken;
             Next();
             Result y=term(curBlock,joinBlocks);
@@ -154,6 +157,8 @@ public class Parser {
             ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
             irCodeGenerator.generateArithmeticIC(curBlock,operator,x,y);
         }
+        if(!x.isMove)
+            x.type = Result.ResultType.instruction;
         return x;
     }
 
@@ -223,10 +228,10 @@ public class Parser {
 
                 if (curToken == Token.OPEN_PARENTHESIS) {
                     Next();
-
+                    Result y = new Result();
                     //find expression
                     if (isExpression(curToken)) {
-                        Result y = expression(curBlock, joinBlocks);
+                        y = expression(curBlock, joinBlocks);
 
                         //get the original definition of y
                         //don't need to do this for the definition of function
@@ -254,14 +259,14 @@ public class Parser {
                         returnRE.buildResult(Result.ResultType.instruction, ins.getInstructionPC());
                         return returnRE;
                     } else if (x.varIdent < 3) {
-                        irCodeGenerator.generateIOIC(curBlock, x.varIdent, null);
+                        irCodeGenerator.generateIOIC(curBlock, x.varIdent, x.varIdent == 0? null:y);
                     } else {
                         Result branch = Result.buildBranch(ControlFlowGraph.allFunctions.get(x.varIdent).getFirstFuncBlock());
                     }
                 }
                 else
                 {
-                    //TODO:WHY NEED THIS? A FUNCTION WITHOUT PARAMETER?
+                    //for function without parameters
                     //branch to function
                     if (x.varIdent == 0) {
                         //need to read
@@ -289,6 +294,7 @@ public class Parser {
         return null;
     }
 
+    //whileStatement = “while” relation “do” StatSequence “od”.
     private BasicBlock whileStatement(){return null;}
 
     //returnStatement = “return” [ expression ] .
@@ -327,7 +333,7 @@ public class Parser {
         else if(curToken == Token.RETURN)
         {
             Result x = returnStatement(curBlock,joinBlocks);
-            irCodeGenerator.generateReturnOp(curBlock,x,function);
+            irCodeGenerator.generateReturnIC(curBlock, x, function);
             return curBlock;
         }
         else{
@@ -339,7 +345,7 @@ public class Parser {
     //statSequence = statement { “;” statement }.
     private BasicBlock stateSequence(BasicBlock curBlock,Stack<BasicBlock> joinBlocks,FunctionDecl function) throws IOException,Error{
         BasicBlock nextBlock=statement(curBlock,joinBlocks,function);
-        if(curToken==Token.SEMICOMA){
+        while(curToken==Token.SEMICOMA){
             Next();
             nextBlock=statement(nextBlock,joinBlocks,function);
         }
@@ -537,11 +543,9 @@ public class Parser {
                         Next();
                     }
                     else
-                        Error("Expect ident in formalParam!");
+                        Error("Expect ident after ,in formalParam!");
                 }
             }
-            else
-                Error("Expect ident in formalParam!");
             if(curToken == Token.CLOSE_PARENTHESIS)
                 Next();
             else
@@ -591,7 +595,7 @@ public class Parser {
                     Next();
                     if(curToken == Token.PERIOD)
                     {
-                        Next();
+                        //Next();
                         lastBlock.generateInstruction(InstructionType.END,null,null);
                     }
                     else
@@ -627,9 +631,9 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-
-        Parser p = new Parser("src/test/test001.txt");
+        Parser p = new Parser("src/test/test003.txt");
         p.parser();
         ControlFlowGraph.printInstruction();
+        System.exit(0);
     }
 }

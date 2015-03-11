@@ -7,6 +7,7 @@ import pl241.uci.edu.middleend.Instruction;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /*
 Date:2015/03/04
@@ -59,7 +60,14 @@ public class ControlFlowGraph {
 
     public static void printInstruction()
     {
-
+        for (BasicBlock block : blocks) {
+            System.out.println("Block_" + block.getId() + "[");
+            for (Map.Entry<Integer, Instruction> entry : block.getPhiFunctionGenerator().getPhiInstructionMap().entrySet())
+                System.out.println(entry.toString());
+            for (Instruction i : block.getInstructions())
+                System.out.println(i.toString());
+            System.out.println("]");
+        }
     }
 
     private static void Error(String msg)

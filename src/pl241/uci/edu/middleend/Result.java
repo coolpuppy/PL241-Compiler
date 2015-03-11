@@ -21,6 +21,7 @@ public class Result implements Comparable<Result>{
     public Token relOp;
     public BasicBlock branchBlock;
     public int instrRef;
+    public boolean isMove = true;
 
     public Result(){
 
@@ -36,6 +37,7 @@ public class Result implements Comparable<Result>{
         this.relOp=result.relOp;
         this.branchBlock=result.branchBlock;
         this.instrRef=result.instrRef;
+        this.isMove = result.isMove;
     }
 
     public void buildResult(ResultType type,int inputValue){
@@ -113,5 +115,32 @@ public class Result implements Comparable<Result>{
         if(this.varIdent == other2.varIdent && this.ssaVersion == other2.ssaVersion)
             return true;
         return false;
+    }
+
+    public String toString(){
+        StringBuilder sb = new StringBuilder("");
+        switch(type){
+            case constant:
+                sb.append(value);
+                break;
+            case variable:
+                sb.append(Scanner.ident.get(varIdent) + "_" + ssaVersion.getVersion());
+                break;
+            case register:
+                sb.append("r" + regno);
+                break;
+            case condition:
+                sb.append(fixuplocation);
+                break;
+            case branch:
+                sb.append( branchBlock!= null ? "[" + branchBlock.getId() + "]": "-1");
+                break;
+            case instruction:
+                sb.append("(" + instrRef + ")");
+                break;
+            default:
+                return "";
+        }
+        return sb.toString();
     }
 }
