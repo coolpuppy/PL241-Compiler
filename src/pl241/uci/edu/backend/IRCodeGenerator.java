@@ -19,10 +19,8 @@ This class is used to generate the intermediate representation code, which is in
 public class IRCodeGenerator {
 
     private CodeTable codeTable;
-    private RegisterAllocation registerAllocation;
 
     public IRCodeGenerator() {
-        this.registerAllocation=new RegisterAllocation();
         this.codeTable = new CodeTable();
     }
 
@@ -50,7 +48,6 @@ public class IRCodeGenerator {
             }
             else{
                 curBlock.generateInstruction(codeTable.arithmeticCode.get(curToken),x,y);
-                //TODO: DEALLOCATE Y
             }
         }
     }
@@ -119,10 +116,6 @@ public class IRCodeGenerator {
         follow.fixuplocation = Instruction.getPc() - 1;
     }
 
-    public void load(Result x)
-    {
-
-    }
 
     /**
      * This is used to fix the branch block of a instruction.
