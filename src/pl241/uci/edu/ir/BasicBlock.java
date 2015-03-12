@@ -3,8 +3,7 @@ package pl241.uci.edu.ir;
 import pl241.uci.edu.cfg.*;
 import pl241.uci.edu.middleend.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class BasicBlock {
     private BlockType type;
@@ -85,6 +84,34 @@ public class BasicBlock {
     public List<Instruction> getInstructions()
     {
         return this.instructions;
+    }
+
+    public HashMap<Integer, Instruction> getPhiFuncs() {return phiFunctionGenerator.getPhiInstructionMap();}
+
+    public HashMap<Integer, Instruction> getPhiFuncsFromStartBlock(BasicBlock startBlock) {
+        HashMap<Integer, Instruction> hM = new HashMap<Integer, Instruction>();
+        BasicBlock cur = this;
+        while (cur != null && cur != startBlock) {
+            hM.putAll(cur.getPhiFuncs());
+            cur = cur.getPreBlock();
+        }
+        return hM;
+    }
+
+    public HashSet<Integer> getPhiVars() {
+        HashSet<Integer> vars = new HashSet<Integer>();
+        vars.addAll(this.getPhiFuncs().keySet());
+        return vars;
+    }
+
+    public HashSet<Integer> getPhiVars(BasicBlock startBlock) {
+        HashSet<Integer> vars = new HashSet<Integer>();
+        BasicBlock cur = this;
+        while (cur != null && cur != startBlock) {
+            vars.addAll(cur.getPhiFuncs().keySet());
+            cur = cur.getPreBlock();
+        }
+        return vars;
     }
 
     /**********************************set function**********************************/
@@ -177,7 +204,19 @@ public class BasicBlock {
 
     }
 
+    public BasicBlock createIfBlock(){
+        BasicBlock ifBlock=new BasicBlock(BlockType.IF);
+        this.followBlock=ifBlock;
+        ifBlock.preBlock=this;
+        return ifBlock;
+    }
 
+    public BasicBlock createElseBlock() {
+        BasicBlock elseBlock = new BasicBlock(BlockType.ELSE);
+        this.elseBlock = elseBlock;
+        elseBlock.elseBlock = this;
+        return elseBlock;
+    }
 
     /**********************************phi function**********************************/
 
@@ -188,6 +227,7 @@ public class BasicBlock {
 
     public void updatePhiFunction(int varIdent,SSAValue ssa,BlockType type)
     {
+        PhiFunctionUpdateType.setBlockPhiMap();
         this.phiFunctionGenerator.updatePhiFunction(varIdent,ssa,PhiFunctionUpdateType.getBlockPhiMap().get(type));
     }
 
@@ -222,6 +262,19 @@ public class BasicBlock {
         {
             if(ins.getInstructionPC() == pc)
                 return ins;
+        }
+        return null;
+    }
+
+    public SSAValue findLastSSA(int ident, BasicBlock startBlock){
+        BasicBlock cur = this;
+        while (cur != null && cur != startBlock) {
+            for(Map.Entry<Integer, Instruction> entry : cur.getPhiFuncs().entrySet()){
+                if(entry.getKey() == ident){
+                    return new SSAValue(entry.getValue().getInstructionPC());
+                }
+            }
+            cur = cur.getPreBlock();
         }
         return null;
     }

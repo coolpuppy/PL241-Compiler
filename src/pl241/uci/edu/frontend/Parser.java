@@ -1,20 +1,18 @@
 package pl241.uci.edu.frontend;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Stack;
+import java.util.*;
 
-import pl241.uci.edu.cfg.ControlFlowGraph;
-import pl241.uci.edu.cfg.DelUseChain;
+import pl241.uci.edu.cfg.*;
 import pl241.uci.edu.backend.IRCodeGenerator;
-import pl241.uci.edu.cfg.VariableTable;
 import pl241.uci.edu.ir.BasicBlock;
+import pl241.uci.edu.ir.BlockType;
 import pl241.uci.edu.ir.FunctionDecl;
 import pl241.uci.edu.middleend.Instruction;
 import pl241.uci.edu.middleend.InstructionType;
 import pl241.uci.edu.middleend.Result;
-import sun.org.mozilla.javascript.internal.Function;
+import pl241.uci.edu.middleend.SSAValue;
+//import sun.org.mozilla.javascript.internal.Function;
 
 /*
 Date:2015/01/26
@@ -154,8 +152,8 @@ public class Parser {
             Next();
             Result y=term(curBlock,joinBlocks);
             x.instrRef=Instruction.getPc();
-            ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
             irCodeGenerator.generateArithmeticIC(curBlock,operator,x,y);
+            ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
         }
         if(!x.isMove)
             x.type = Result.ResultType.instruction;
@@ -290,8 +288,139 @@ public class Parser {
     }
 
     //ifStatement = “if” relation “then” statSequence [ “else” statSequence ] “fi”.
-    private BasicBlock ifStatement(BasicBlock curBlock,Stack<BasicBlock> joinBlocks){
+    private BasicBlock ifStatement(BasicBlock curBlock,Stack<BasicBlock> joinBlocks) throws IOException,Error{
+        HashMap<Integer,ArrayList<SSAValue>> ssaUseChain=VariableTable.cloneSSAUseChain();
+        if(curToken==Token.IF){
+            Next();
+            Result follow=new Result();
+            follow.fixuplocation=0;
+            Result relation=relation(curBlock,null);
+            BasicBlock joinBlock=new BasicBlock(BlockType.IF_JOIN);
+            curBlock.setJoinBlock(joinBlock);
+            irCodeGenerator.condNegBraFwd(curBlock,relation);
+            BasicBlock thenEndBlock=null;
+            BasicBlock elseEndBlock=null;
+            if(curToken==Token.THEN){
+                Next();
+                if(joinBlocks==null){
+                    joinBlocks=new Stack<BasicBlock>();
+                }
+                joinBlocks.push(joinBlock);
+                thenEndBlock=stateSequence(curBlock.createIfBlock(),joinBlocks,null);
+                joinBlocks.pop();
+                if(curToken==Token.ELSE){
+                    VariableTable.setSSAUseChain(ssaUseChain);
+                    irCodeGenerator.unCondBraFwd(thenEndBlock,follow);
+                    Next();
+                    BasicBlock elseBlock=curBlock.createElseBlock();
+                    irCodeGenerator.fix(relation.fixuplocation,elseBlock);
+                    joinBlocks.push(joinBlock);
+                    elseEndBlock=stateSequence(elseBlock,joinBlocks,null);
+                    joinBlocks.pop();
+                }
+                else{
+                    irCodeGenerator.fix(relation.fixuplocation,joinBlock);
+                }
+                if(curToken==Token.FI){
+                    Next();
+                    irCodeGenerator.fixAll(follow.fixuplocation,joinBlock);
+                    thenEndBlock.setJoinBlock(joinBlock);
+
+                    if (elseEndBlock != null) {
+                        elseEndBlock.setJoinBlock(joinBlock);
+                    } else {
+                        curBlock.setElseBlock(joinBlock);
+                    }
+                    updatePhiFuncsOccurInPreviousJoinBlocks(curBlock,thenEndBlock,elseEndBlock,joinBlock,ssaUseChain);
+                    createPhiFuncsOccurInPreviousIfJoinBlocks(curBlock,thenEndBlock,elseEndBlock,joinBlock,ssaUseChain);
+                    VariableTable.setSSAUseChain(ssaUseChain);
+                    updateReferenceForPhiVarInJoinBlock(joinBlock);
+                    return joinBlock;
+                }
+                else{
+                    Error("Expect fi in if statement!");
+                }
+            }
+            else{
+                Error("Expect then in if statement!");
+            }
+        }
+        else{
+            Error("Expect if in if statement!");
+        }
         return null;
+    }
+
+    public void createPhiFuncsOccurInPreviousIfJoinBlocks(BasicBlock curBlock, BasicBlock ifLastBlock, BasicBlock elseLastBlock, BasicBlock joinBlock, HashMap<Integer, ArrayList<SSAValue>> ssaMap)  throws Error {
+        HashSet<Integer> phiVars = new HashSet<Integer>();
+        HashSet<Integer> ifPhiVars = ifLastBlock.getPhiVars(curBlock);
+        phiVars.addAll(ifPhiVars);
+        HashSet<Integer> elsePhiVars = null;
+        if (elseLastBlock != null) {
+            elsePhiVars = elseLastBlock.getPhiVars(curBlock);
+            phiVars.addAll(elsePhiVars);
+        }
+        HashSet<Integer> curPhiVars = joinBlock.getPhiVars();
+        for (Integer phiVar : phiVars) {
+            if (!curPhiVars.contains(phiVar)) {
+                joinBlock.createPhiFunction(phiVar);
+                if (ifPhiVars.contains(phiVar))
+                    joinBlock.updatePhiFunction(phiVar, ifLastBlock.findLastSSA(phiVar, curBlock),
+                            ifLastBlock.getType());
+                if (elseLastBlock != null && elsePhiVars.contains(phiVar))
+                    joinBlock.updatePhiFunction(phiVar, elseLastBlock.findLastSSA(phiVar, curBlock),
+                            elseLastBlock.getType());
+                else
+                    joinBlock.updatePhiFunction(phiVar, ssaMap.get(phiVar).get(ssaMap.get(phiVar).size() - 1),
+                            elseLastBlock.getType());
+            }
+        }
+    }
+
+    public void updatePhiFuncsOccurInPreviousJoinBlocks(BasicBlock curBlock, BasicBlock ifLastBlock, BasicBlock elseLastBlock, BasicBlock joinBlock, HashMap<Integer, ArrayList<SSAValue>> ssaMap) {
+        HashMap<Integer, Instruction> leftPhiFuncs = ifLastBlock.getPhiFuncsFromStartBlock(curBlock);
+        updateValuesInOuterPhiFunc(leftPhiFuncs, joinBlock, true);
+        if (elseLastBlock != null) {
+            HashMap<Integer, Instruction> rightPhiFuncs = elseLastBlock.getPhiFuncsFromStartBlock(curBlock);
+            updateValuesInOuterPhiFunc(rightPhiFuncs, joinBlock, false);
+        } else {
+            for (Integer phiVar : joinBlock.getPhiFuncs().keySet()) {
+                joinBlock.updatePhiFunction(phiVar, ssaMap.get(phiVar).get(ssaMap.get(phiVar).size() - 1), elseLastBlock.getType());
+            }
+        }
+    }
+
+    public void updateReferenceForPhiVarInJoinBlock(BasicBlock joinBlock) {
+        for (Map.Entry<Integer, Instruction> entry : joinBlock.getPhiFuncs().entrySet()) {
+            VariableTable.addSSAUseChain(entry.getKey(), entry.getValue().getInstructionPC());
+            for (Instruction instr : joinBlock.getInstructions()) {
+                if (instr.getLeftResult() != null && instr.getLeftResult().varIdent == entry.getKey()) {
+                    instr.getLeftResult().setSSAVersion(entry.getValue().getInstructionPC());
+                }
+                if (instr.getRightResult() != null && instr.getRightResult().varIdent == entry.getKey()) {
+                    instr.getRightResult().setSSAVersion(entry.getValue().getInstructionPC());
+                }
+            }
+        }
+    }
+
+    public void updateValuesInOuterPhiFunc(HashMap<Integer, Instruction> phifuncs, BasicBlock outJoinBlock,
+                                           boolean fromLeft) {
+        if (fromLeft) {
+            for (Map.Entry<Integer, Instruction> entry1 : phifuncs.entrySet()) {
+                for (Map.Entry<Integer, Instruction> entry2 : outJoinBlock.getPhiFuncs().entrySet()) {
+                    if (entry1.getKey() == entry2.getKey())
+                        entry2.getValue().setLeftSSA(new SSAValue(entry1.getValue().getInstructionPC()));
+                }
+            }
+        } else {
+            for (Map.Entry<Integer, Instruction> entry1 : phifuncs.entrySet()) {
+                for (Map.Entry<Integer, Instruction> entry2 : outJoinBlock.getPhiFuncs().entrySet()) {
+                    if (entry1.getKey() == entry2.getKey())
+                        entry2.getValue().setRightSSA(new SSAValue(entry1.getValue().getInstructionPC()));
+                }
+            }
+        }
     }
 
     //whileStatement = “while” relation “do” StatSequence “od”.
@@ -631,7 +760,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        Parser p = new Parser("src/test/test003.txt");
+        Parser p = new Parser("src/test/test007.txt");
         p.parser();
         ControlFlowGraph.printInstruction();
         System.exit(0);

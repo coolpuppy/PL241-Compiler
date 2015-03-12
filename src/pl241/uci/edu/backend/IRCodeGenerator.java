@@ -107,6 +107,18 @@ public class IRCodeGenerator {
         function.setReturnInstr(returnInstr);
     }
 
+    public void condNegBraFwd(BasicBlock curBlock,Result relation){
+        relation.fixuplocation=Instruction.getPc();
+        curBlock.generateInstruction(codeTable.branchCode.get(relation.relOp),relation,Result.buildBranch(null));
+    }
+
+    public void unCondBraFwd(BasicBlock curBlock, Result follow) {
+        Result branch = Result.buildBranch(null);
+        branch.fixuplocation = follow.fixuplocation;
+        curBlock.generateInstruction(InstructionType.BRA, null, branch);
+        follow.fixuplocation = Instruction.getPc() - 1;
+    }
+
     public void load(Result x)
     {
 
@@ -119,11 +131,18 @@ public class IRCodeGenerator {
      *                        As only the second operand of the instruction can indicate the branch block,
      *                        we only fix the right result.
      */
-    private void fix(int pc,BasicBlock referenceBlock)
+    public void fix(int pc,BasicBlock referenceBlock)
     {
         ControlFlowGraph.getInstruction(pc).getRightResult().branchBlock = referenceBlock;
     }
 
+    public void fixAll(int pc, BasicBlock referenceBlock) {
+        while (pc != 0) {
+            int next = ControlFlowGraph.getInstruction(pc).getRightResult().fixuplocation;
+            fix(pc, referenceBlock);
+            pc = next;
+        }
+    }
 
     private void Error(String msg)
     {
