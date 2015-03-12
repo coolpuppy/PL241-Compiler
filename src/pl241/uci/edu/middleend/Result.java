@@ -3,6 +3,7 @@ package pl241.uci.edu.middleend;
 import pl241.uci.edu.frontend.Scanner;
 import pl241.uci.edu.ir.BasicBlock;
 import pl241.uci.edu.frontend.Token;
+import java.util.ArrayList;
 
 /*
 Data:2015/03/02
