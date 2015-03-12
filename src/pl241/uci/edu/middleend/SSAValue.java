@@ -26,4 +26,8 @@ public class SSAValue {
     {
         return new SSAValue(this.version);
     }
+
+    public String toString(){
+        return Integer.toString(version);
+    }
 }

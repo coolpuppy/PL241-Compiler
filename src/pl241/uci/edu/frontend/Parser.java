@@ -15,8 +15,10 @@ import pl241.uci.edu.middleend.InstructionType;
 import pl241.uci.edu.middleend.Result;
 import pl241.uci.edu.optimizer.CP;
 import pl241.uci.edu.optimizer.CSE;
+import pl241.uci.edu.cfg.VCGGraphGenerator;
+import pl241.uci.edu.cfg.DominatorTreeGenerator;
 import pl241.uci.edu.optimizer.RegisterAllocation;
-import sun.org.mozilla.javascript.internal.Function;
+//import sun.org.mozilla.javascript.internal.Function;
 import pl241.uci.edu.middleend.SSAValue;
 
 /*
@@ -766,7 +768,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test006";
+        String testname = "test007";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
@@ -784,10 +786,10 @@ public class Parser {
 
         CP cp = new CP();
         cp.CPoptimize(DominatorTreeGenerator.root);
-        vcg.printDominantTree();
+        //vcg.printDominantTree();
 
         CSE cse = new CSE();
-        cse.CSEoptimize(DominatorTreeGenerator.root);
+        //cse.CSEoptimize(DominatorTreeGenerator.root);
         //vcg.printDominantTree();
 
 //        RegisterAllocation ra = new RegisterAllocation();

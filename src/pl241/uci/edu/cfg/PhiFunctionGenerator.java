@@ -26,7 +26,7 @@ public class PhiFunctionGenerator {
             return this.phiInstructionMap.get(address);
         else
         {
-            Instruction returnIns = new Instruction(InstructionType.PHI,SSA,SSA);
+            Instruction returnIns = new Instruction(InstructionType.PHI,address,SSA,SSA);
             phiInstructionMap.put(address,returnIns);
 
             //update the control flow graph

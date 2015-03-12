@@ -6,6 +6,7 @@ This is used to store the instruction in pre-SSA form and SSA form. We use Resul
  */
 
 import pl241.uci.edu.cfg.ControlFlowGraph;
+import pl241.uci.edu.frontend.Scanner;
 
 import java.util.ArrayList;
 
@@ -96,10 +97,11 @@ public class Instruction {
         ControlFlowGraph.allInstructions.add(this);
     }
 
-    public Instruction(InstructionType op,SSAValue s1, SSAValue s2)
+    public Instruction(InstructionType op,int varIdent, SSAValue s1, SSAValue s2)
     {
         initializedOpList();
         this.op = op;
+        this.variableName= Scanner.ident.get(varIdent);
         this.s1 = s1;
         this.s2 = s2;
         this.instructionPC = pc;
