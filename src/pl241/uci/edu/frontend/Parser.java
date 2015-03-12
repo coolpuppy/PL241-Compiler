@@ -3,16 +3,21 @@ package pl241.uci.edu.frontend;
 import java.io.IOException;
 import java.util.*;
 
-import pl241.uci.edu.cfg.*;
+import pl241.uci.edu.cfg.ControlFlowGraph;
+import pl241.uci.edu.cfg.DelUseChain;
 import pl241.uci.edu.backend.IRCodeGenerator;
+import pl241.uci.edu.cfg.VariableTable;
 import pl241.uci.edu.ir.BasicBlock;
 import pl241.uci.edu.ir.BlockType;
 import pl241.uci.edu.ir.FunctionDecl;
 import pl241.uci.edu.middleend.Instruction;
 import pl241.uci.edu.middleend.InstructionType;
 import pl241.uci.edu.middleend.Result;
+import pl241.uci.edu.optimizer.CP;
+import pl241.uci.edu.optimizer.CSE;
+import pl241.uci.edu.optimizer.RegisterAllocation;
+import sun.org.mozilla.javascript.internal.Function;
 import pl241.uci.edu.middleend.SSAValue;
-//import sun.org.mozilla.javascript.internal.Function;
 
 /*
 Date:2015/01/26
@@ -152,6 +157,7 @@ public class Parser {
             Next();
             Result y=term(curBlock,joinBlocks);
             x.instrRef=Instruction.getPc();
+            //generate the instruction
             irCodeGenerator.generateArithmeticIC(curBlock,operator,x,y);
             ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
         }
@@ -760,9 +766,32 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        Parser p = new Parser("src/test/test007.txt");
+        String testname = "test006";
+        Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
-        System.exit(0);
+
+        System.out.println(ControlFlowGraph.delUseChain.xDefUseChains);
+        System.out.println(ControlFlowGraph.delUseChain.yDefUseChains);
+
+        VCGGraphGenerator vcg = new VCGGraphGenerator(testname);
+        //vcg.printCFG();
+
+        DominatorTreeGenerator dt = new DominatorTreeGenerator();
+        dt.buildDominatorTree();
+
+        //vcg.printDominantTree();
+
+        CP cp = new CP();
+        cp.CPoptimize(DominatorTreeGenerator.root);
+        vcg.printDominantTree();
+
+        CSE cse = new CSE();
+        cse.CSEoptimize(DominatorTreeGenerator.root);
+        //vcg.printDominantTree();
+
+//        RegisterAllocation ra = new RegisterAllocation();
+//        ra.optimize(ControlFlowGraph.getFirstBlock());
+//        vcg.printCFG();
     }
 }

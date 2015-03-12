@@ -18,9 +18,15 @@ public class CP {
 
     public void CPoptimize(DominatorTreeNode root)
     {
-
+        CPoptimizeRecursion(root,new HashMap<Result, Integer>(),new HashMap<Result, Integer>());
     }
 
+    /**
+     * Do copy propagation.
+     * @param root, root node of dominator tree.
+     * @param ResultTOInstruction, contain all the result can be replace by a constant
+     * @param ResultTOConstant, constain all the result can be replace by a instruction
+     */
     public void CPoptimizeRecursion(DominatorTreeNode root,HashMap<Result,Integer>ResultTOInstruction,HashMap<Result,Integer>ResultTOConstant)
     {
         if(root == null)
@@ -43,21 +49,17 @@ public class CP {
                 ResultTOInstruction.put(y, pc);
 
                 // mark next instr as deleted
-                next.deleted = true;
+                //next.deleted = true;
             }
             else if(ins.isMoveConstant())
             {
                 int constant = ins.getLeftResult().value;
                 ResultTOConstant.put(ins.getRightResult(),constant);
-
-                ins.deleted = true;
             }
             else if(ins.isMoveInstruction())
             {
                 int pc = ins.getLeftResult().instrRef;
                 ResultTOInstruction.put(ins.getRightResult(),pc);
-
-                ins.deleted = true;
             }
             //the variable is in the right result
             else if(ins.isMoveVar())
@@ -68,12 +70,12 @@ public class CP {
                     int constant = ResultTOConstant.get(left);
                     ResultTOConstant.put(right, constant);
                     //mark instr as deleted
-                    ins.deleted = true;
+                    //ins.deleted = true;
                 }else{
                     int pc = ResultTOInstruction.get(left);
                     ResultTOInstruction.put(right, pc);
                     // mark instr as deleted
-                    ins.deleted = true;
+                    //ins.deleted = true;
                     ins.referenceInstrId = pc;
                 }
             }

@@ -10,10 +10,10 @@ import java.util.HashMap;
 public class DelUseChain {
 
     //this store all the use chains of left result of pre-SSA
-    private HashMap<Instruction, ArrayList<Instruction>> xDefUseChains;
+    public HashMap<Instruction, ArrayList<Instruction>> xDefUseChains;
 
     //this store all the use chains of right result of pre-SSA
-    private HashMap<Instruction, ArrayList<Instruction>> yDefUseChains;
+    public HashMap<Instruction, ArrayList<Instruction>> yDefUseChains;
 
     public DelUseChain()
     {
