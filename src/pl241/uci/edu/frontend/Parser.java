@@ -339,8 +339,8 @@ public class Parser {
                     } else {
                         curBlock.setElseBlock(joinBlock);
                     }
-                    updatePhiFuncsOccurInPreviousJoinBlocks(curBlock,thenEndBlock,elseEndBlock,joinBlock,ssaUseChain);
-                    createPhiFuncsOccurInPreviousIfJoinBlocks(curBlock,thenEndBlock,elseEndBlock,joinBlock,ssaUseChain);
+                    updatePhiFuncsInJoinBlocks(curBlock,thenEndBlock,elseEndBlock,joinBlock,ssaUseChain);
+                    createPhiInIfJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
                     VariableTable.setSSAUseChain(ssaUseChain);
                     updateReferenceForPhiVarInJoinBlock(joinBlock);
                     return joinBlock;
@@ -359,13 +359,13 @@ public class Parser {
         return null;
     }
 
-    public void createPhiFuncsOccurInPreviousIfJoinBlocks(BasicBlock curBlock, BasicBlock ifLastBlock, BasicBlock elseLastBlock, BasicBlock joinBlock, HashMap<Integer, ArrayList<SSAValue>> ssaMap)  throws Error {
+    private void createPhiInIfJoinBlocks(BasicBlock curBlock, BasicBlock ifEndBlock, BasicBlock elseEndBlock, BasicBlock joinBlock, HashMap<Integer, ArrayList<SSAValue>> ssaUseChain)  throws Error {
         HashSet<Integer> phiVars = new HashSet<Integer>();
-        HashSet<Integer> ifPhiVars = ifLastBlock.getPhiVars(curBlock);
+        HashSet<Integer> ifPhiVars = ifEndBlock.getPhiVars(curBlock);
         phiVars.addAll(ifPhiVars);
         HashSet<Integer> elsePhiVars = null;
-        if (elseLastBlock != null) {
-            elsePhiVars = elseLastBlock.getPhiVars(curBlock);
+        if (elseEndBlock != null) {
+            elsePhiVars = elseEndBlock.getPhiVars(curBlock);
             phiVars.addAll(elsePhiVars);
         }
         HashSet<Integer> curPhiVars = joinBlock.getPhiVars();
@@ -373,32 +373,30 @@ public class Parser {
             if (!curPhiVars.contains(phiVar)) {
                 joinBlock.createPhiFunction(phiVar);
                 if (ifPhiVars.contains(phiVar))
-                    joinBlock.updatePhiFunction(phiVar, ifLastBlock.findLastSSA(phiVar, curBlock),
-                            ifLastBlock.getType());
-                if (elseLastBlock != null && elsePhiVars.contains(phiVar))
-                    joinBlock.updatePhiFunction(phiVar, elseLastBlock.findLastSSA(phiVar, curBlock),
-                            elseLastBlock.getType());
+                    joinBlock.updatePhiFunction(phiVar, ifEndBlock.findLastSSA(phiVar, curBlock), ifEndBlock.getType());
+                if (elseEndBlock != null && elsePhiVars.contains(phiVar))
+                    joinBlock.updatePhiFunction(phiVar, elseEndBlock.findLastSSA(phiVar, curBlock), elseEndBlock.getType());
                 else
-                    joinBlock.updatePhiFunction(phiVar, ssaMap.get(phiVar).get(ssaMap.get(phiVar).size() - 1),
-                            elseLastBlock.getType());
+                    joinBlock.updatePhiFunction(phiVar, ssaUseChain.get(phiVar).get(ssaUseChain.get(phiVar).size() - 1), elseEndBlock.getType());
             }
         }
     }
 
-    public void updatePhiFuncsOccurInPreviousJoinBlocks(BasicBlock curBlock, BasicBlock ifLastBlock, BasicBlock elseLastBlock, BasicBlock joinBlock, HashMap<Integer, ArrayList<SSAValue>> ssaMap) {
+    private void updatePhiFuncsInJoinBlocks(BasicBlock curBlock, BasicBlock ifLastBlock, BasicBlock elseLastBlock, BasicBlock joinBlock, HashMap<Integer, ArrayList<SSAValue>> ssaMap) {
         HashMap<Integer, Instruction> leftPhiFuncs = ifLastBlock.getPhiFuncsFromStartBlock(curBlock);
         updateValuesInOuterPhiFunc(leftPhiFuncs, joinBlock, true);
         if (elseLastBlock != null) {
             HashMap<Integer, Instruction> rightPhiFuncs = elseLastBlock.getPhiFuncsFromStartBlock(curBlock);
             updateValuesInOuterPhiFunc(rightPhiFuncs, joinBlock, false);
-        } else {
+        }
+        else {
             for (Integer phiVar : joinBlock.getPhiFuncs().keySet()) {
                 joinBlock.updatePhiFunction(phiVar, ssaMap.get(phiVar).get(ssaMap.get(phiVar).size() - 1), elseLastBlock.getType());
             }
         }
     }
 
-    public void updateReferenceForPhiVarInJoinBlock(BasicBlock joinBlock) {
+    private void updateReferenceForPhiVarInJoinBlock(BasicBlock joinBlock) {
         for (Map.Entry<Integer, Instruction> entry : joinBlock.getPhiFuncs().entrySet()) {
             VariableTable.addSSAUseChain(entry.getKey(), entry.getValue().getInstructionPC());
             for (Instruction instr : joinBlock.getInstructions()) {
@@ -412,27 +410,93 @@ public class Parser {
         }
     }
 
-    public void updateValuesInOuterPhiFunc(HashMap<Integer, Instruction> phifuncs, BasicBlock outJoinBlock,
-                                           boolean fromLeft) {
-        if (fromLeft) {
+    private void updateValuesInOuterPhiFunc(HashMap<Integer, Instruction> phifuncs, BasicBlock outJoinBlock, boolean Left) {
+        if (Left) {
             for (Map.Entry<Integer, Instruction> entry1 : phifuncs.entrySet()) {
                 for (Map.Entry<Integer, Instruction> entry2 : outJoinBlock.getPhiFuncs().entrySet()) {
-                    if (entry1.getKey() == entry2.getKey())
+                    if (entry1.getKey() == entry2.getKey()) {
                         entry2.getValue().setLeftSSA(new SSAValue(entry1.getValue().getInstructionPC()));
+                    }
                 }
             }
-        } else {
+        }
+        else {
             for (Map.Entry<Integer, Instruction> entry1 : phifuncs.entrySet()) {
                 for (Map.Entry<Integer, Instruction> entry2 : outJoinBlock.getPhiFuncs().entrySet()) {
-                    if (entry1.getKey() == entry2.getKey())
+                    if (entry1.getKey() == entry2.getKey()) {
                         entry2.getValue().setRightSSA(new SSAValue(entry1.getValue().getInstructionPC()));
+                    }
                 }
             }
         }
     }
 
     //whileStatement = “while” relation “do” StatSequence “od”.
-    private BasicBlock whileStatement(){return null;}
+    private BasicBlock whileStatement(BasicBlock curBlock, Stack<BasicBlock> joinBlocks) throws IOException,Error{
+        HashMap<Integer,ArrayList<SSAValue>> ssaUseChain=VariableTable.cloneSSAUseChain();
+        if (curToken==Token.WHILE) {
+            Next();
+            BasicBlock joinBlock = new BasicBlock(BlockType.WHILE_JOIN);
+            curBlock.setFollowBlock(joinBlock);
+            curBlock = joinBlock;
+            Result relation = relation(curBlock, null);
+            irCodeGenerator.condNegBraFwd(curBlock, relation);
+            BasicBlock doEndBlock = null;
+            if (curToken== Token.DO) {
+                Next();
+                BasicBlock startBlock = curBlock.createDoBlock();
+                if (joinBlocks == null) {
+                    joinBlocks = new Stack<BasicBlock>();
+                }
+                joinBlocks.push(joinBlock);
+                doEndBlock = stateSequence(startBlock, joinBlocks, null);
+                doEndBlock.generateInstruction(InstructionType.BRA, null, Result.buildBranch(curBlock));
+                //updateReferenceForPhiVarInLoopBody(joinBlock, startBlock, doEndBlock);
+                BasicBlock followBlock = curBlock.createElseBlock();
+                irCodeGenerator.fix(relation.fixuplocation, followBlock);
+                doEndBlock.setBackBlock(curBlock);
+                joinBlocks.pop();
+                for (BasicBlock jB : joinBlocks) {
+                    updateValuesInOuterPhiFunc(joinBlock.getPhiFuncs(), jB, false);
+                }
+                //createPhiInWhileJoinBlocks(curBlock, doEndBlock, joinBlock, ssaUseChain);
+                VariableTable.setSSAUseChain(ssaUseChain);
+                updateReferenceForPhiVarInJoinBlock(joinBlock);
+                if (curToken == Token.OD) {
+                    Next();
+                    return followBlock;
+                } else
+                    Error("whileStatement expect 'od'");
+            } else
+                Error("whileStatement expect 'do'");
+        } else {
+            Error("whileStatement expect 'while'");
+        }
+        return null;
+    }
+/*
+    private void createPhiInWhileJoinBlocks(BasicBlock curBlock,BasicBlock doEndBlock, BasicBlock joinBlock,HashMap<Integer,ArrayList<SSAValue>> ssaUseChain){
+        HashSet<Integer> phiVars = new HashSet<Integer>();
+        phiVars.addAll(doEndBlock.getPhiVars(curBlock));
+        HashSet<Integer> curPhiVars = joinBlock.getPhiVars();
+        for (Integer phiVar : phiVars) {
+            if (!curPhiVars.contains(phiVar)) {
+                Instruction curInstr = joinBlock.createPhiFunction(phiVar);
+                joinBlock.updatePhiFunction(phiVar, doEndBlock.findLastSSA(phiVar, curBlock), doEndBlock.getType());
+                joinBlock.updatePhiFunction(phiVar, ssaUseChain.get(phiVar).get(ssaUseChain.get(phiVar).size() - 1), );
+                if (joinBlock.getType() == BlockType.WHILE_JOIN) {
+                    doEndBlock.assignNewSSA(phiVar, ssaUseChain.get(phiVar).get(ssaUseChain.get(phiVar).size() - 1), new SSAValue(curInstr.getInstructionPC()), curBlock);
+                }
+            }
+        }
+    }
+    */
+
+    /*public void updateReferenceForPhiVarInLoopBody(BasicBlock innerJoinBlock, BasicBlock startBlock,
+                                                   BasicBlock doLastBlock) throws Throwable {
+        for (Map.Entry<Integer, Instruction> entry : innerJoinBlock.getPhiFuncs().entrySet())
+            innerJoinBlock.updateValueReference(entry.getKey(), entry.getValue().getLeftSSA().getVersion(), entry.getValue().getInstructionPC(), startBlock, doLastBlock);
+    }*/
 
     //returnStatement = “return” [ expression ] .
     private Result returnStatement(BasicBlock curBlock,Stack<BasicBlock>joinBlocks) throws IOException{
@@ -465,7 +529,7 @@ public class Parser {
         }
         else if(curToken == Token.WHILE)
         {
-            return whileStatement();
+            return whileStatement(curBlock,joinBlocks);
         }
         else if(curToken == Token.RETURN)
         {
@@ -768,7 +832,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test007";
+        String testname = "test011";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
@@ -777,7 +841,7 @@ public class Parser {
         System.out.println(ControlFlowGraph.delUseChain.yDefUseChains);
 
         VCGGraphGenerator vcg = new VCGGraphGenerator(testname);
-        //vcg.printCFG();
+        vcg.printCFG();
 
         DominatorTreeGenerator dt = new DominatorTreeGenerator();
         dt.buildDominatorTree();

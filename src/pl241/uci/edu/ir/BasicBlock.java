@@ -214,15 +214,22 @@ public class BasicBlock {
     public BasicBlock createElseBlock() {
         BasicBlock elseBlock = new BasicBlock(BlockType.ELSE);
         this.elseBlock = elseBlock;
-        elseBlock.elseBlock = this;
+        elseBlock.preBlock = this;
         return elseBlock;
+    }
+
+    public BasicBlock createDoBlock(){
+        BasicBlock doBlock=new BasicBlock(BlockType.DO);
+        this.followBlock=doBlock;
+        doBlock.preBlock=this;
+        return doBlock;
     }
 
     /**********************************phi function**********************************/
 
-    public void createPhiFunction(int varIdent)
+    public Instruction createPhiFunction(int varIdent)
     {
-        this.phiFunctionGenerator.addPhiFunction(varIdent,VariableTable.getLatestVersion(varIdent));
+        return this.phiFunctionGenerator.addPhiFunction(varIdent,VariableTable.getLatestVersion(varIdent));
     }
 
     public void updatePhiFunction(int varIdent,SSAValue ssa,BlockType type)
