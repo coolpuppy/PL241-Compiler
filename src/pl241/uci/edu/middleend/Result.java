@@ -22,6 +22,14 @@ public class Result implements Comparable<Result>{
     public BasicBlock branchBlock;
     public int instrRef;
     public boolean isMove = true;
+    public boolean isArray = false;
+    public boolean isArrayDesignator = false;
+
+    //for the define of a array
+    public ArrayList<Result> arrayDimension = new ArrayList<Result>();
+
+    //for the designator which is a array
+    public ArrayList<Result> designatorDimension = new ArrayList<Result>();
 
     public Result(){
 
@@ -142,5 +150,10 @@ public class Result implements Comparable<Result>{
                 return "";
         }
         return sb.toString();
+    }
+
+    public void setArrayDimension(ArrayList<Result> r)
+    {
+        this.arrayDimension = r;
     }
 }

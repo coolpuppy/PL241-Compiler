@@ -78,7 +78,7 @@ public class Parser {
     //designator = ident{ "[" expression "]" }.
     private Result designator(BasicBlock curBlock,Stack<BasicBlock>joinBlocks) throws IOException,Error{
         Result designator=new Result();
-        List<Result> dimensions=new ArrayList<Result>();
+        ArrayList<Result> dimensions=new ArrayList<Result>();
         if(curToken==Token.IDENTIFIER){
             designator.buildResult(Result.ResultType.variable,scanner.getVarIdent());
             Next();
@@ -100,6 +100,8 @@ public class Parser {
             return designator;
         }
         else{
+            designator.isArrayDesignator = true;
+            designator.designatorDimension = dimensions;
             return designator;
         }
     }
@@ -490,11 +492,15 @@ public class Parser {
     }
 
     //typeDecl = “var” | “array” “[“ number “]” { “[“ number “]” }.
-    private void typeDecl() throws IOException{
+    private ArrayList<Result> typeDecl() throws IOException{
         if(curToken == Token.VAR)
+        {
             Next();
+            return null;
+        }
         else if(curToken == Token.ARRAY)
         {
+            ArrayList<Result> returnRes = new ArrayList<>();
             Next();
             boolean hasDimension = false;
             while(curToken == Token.OPEN_BRACKET)
@@ -505,6 +511,7 @@ public class Parser {
                 if(curToken == Token.NUMBER)
                 {
                     x.buildResult(Result.ResultType.constant,scanner.getVal());
+                    returnRes.add(x);
                     Next();
                 }
                 else
@@ -513,7 +520,10 @@ public class Parser {
                 }
 
                 if(curToken == Token.CLOSE_BRACKET)
+                {
                     Next();
+                    return returnRes;
+                }
                 else
                     Error("Expect ] in ARRAY declaration!");
             }
@@ -525,6 +535,7 @@ public class Parser {
         {
             Error("Expect VAR or ARRAY in typeDecl!");
         }
+        return null;
     }
 
     //varDecl = typeDecl ident { “,” ident } “;” .
@@ -532,12 +543,19 @@ public class Parser {
         Result x = null;
 
         //call the typedel for the variable and array
-        typeDecl();
+        ArrayList <Result> r = typeDecl();
 
         if(this.curToken == Token.IDENTIFIER)
         {
             x = new Result();
             x.buildResult(Result.ResultType.variable,scanner.getID());
+
+            //if x is a array, set the dimension
+            if(r != null)
+            {
+                x.setArrayDimension(r);
+                x.isArray = true;
+            }
 
             //declare the variable
             declareVariable(curBlock,x,function);
@@ -592,6 +610,7 @@ public class Parser {
                 VariableTable.addGlobalVariable(varIdent);
             }
 
+            curBlock.generateInstruction(InstructionType.LOAD,x,null);
             //we add a move at the end of every variable declaration
             curBlock.generateInstruction(InstructionType.MOVE, Result.buildConstant(0), x);
         }
