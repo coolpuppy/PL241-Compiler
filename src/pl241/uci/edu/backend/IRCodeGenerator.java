@@ -107,10 +107,6 @@ public class IRCodeGenerator {
         function.setReturnInstr(returnInstr);
     }
 
-    public void load(Result x)
-    {
-
-    }
 
     /**
      * This is used to fix the branch block of a instruction.

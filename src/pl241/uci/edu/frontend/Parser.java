@@ -156,8 +156,10 @@ public class Parser {
             Next();
             Result y=term(curBlock,joinBlocks);
             x.instrRef=Instruction.getPc();
-            ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
+            //generate the instruction
             irCodeGenerator.generateArithmeticIC(curBlock,operator,x,y);
+
+            ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
         }
         if(!x.isMove)
             x.type = Result.ResultType.instruction;
@@ -633,11 +635,12 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        Parser p = new Parser("src/test/test003.txt");
+        String testname = "test019";
+        Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
 
-        VCGGraphGenerator vcg = new VCGGraphGenerator("test003");
+        VCGGraphGenerator vcg = new VCGGraphGenerator(testname);
         //vcg.printCFG();
 
         DominatorTreeGenerator dt = new DominatorTreeGenerator();
