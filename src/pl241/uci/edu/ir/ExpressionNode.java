@@ -30,10 +30,14 @@ public class ExpressionNode {
         else
             hashcode1 =  result1.value * 61;
 
-        if(result2.type == Result.ResultType.variable)
+        if(result2!=null&&result2.type == Result.ResultType.variable)
             hashcode2 =  result2.varIdent * 41 + result2.ssaVersion.hashCode() * 59;
-        else
-            hashcode2 =  result2.value * 61;
+        else if(result2!=null) {
+            hashcode2 = result2.value * 61;
+        }
+        else{
+            hashcode2 = 0;
+        }
         return hashcode1 + hashcode2;
     }
 
@@ -48,6 +52,13 @@ public class ExpressionNode {
 
     private boolean isEqualResult(Result temp1, Result temp2)
     {
+        if(temp2==null&&temp1==null){
+            return true;
+        }
+        else if(temp1==null||temp2==null){
+            return false;
+        }
+
         if(temp1.type != temp2.type)
             return false;
 

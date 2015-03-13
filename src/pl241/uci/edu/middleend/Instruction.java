@@ -248,7 +248,8 @@ public class Instruction {
     }
 
     public boolean isExpressionOp(){
-        return (op==InstructionType.NEG||op==InstructionType.ADD||op==InstructionType.SUB||op==InstructionType.MUL||op==InstructionType.DIV);
+        return (op==InstructionType.NEG||op==InstructionType.ADD||op==InstructionType.SUB||op==InstructionType.MUL||op==InstructionType.DIV||
+                op==InstructionType.ADDA||op==InstructionType.LOADADD||op==InstructionType.STOREADD);
     }
 
     public boolean isLoadInstruction()

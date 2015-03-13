@@ -28,6 +28,9 @@ public class CSE {
         cse.put(InstructionType.MUL, new HashMap<ExpressionNode, Integer>());
         cse.put(InstructionType.DIV, new HashMap<ExpressionNode, Integer>());
         cse.put(InstructionType.SUB, new HashMap<ExpressionNode, Integer>());
+        cse.put(InstructionType.ADDA, new HashMap<ExpressionNode, Integer>());
+        cse.put(InstructionType.LOADADD, new HashMap<ExpressionNode, Integer>());
+        cse.put(InstructionType.STOREADD, new HashMap<ExpressionNode, Integer>());
     }
 
     public void CSEoptimize(DominatorTreeNode root)
@@ -78,7 +81,7 @@ public class CSE {
 
                     //mark next intruction as replce
                     Instruction next = root.block.getNextIntruction(ins);
-                    if (next != null&&!next.deleted) {
+                    if (next != null&&!next.deleted&&next.getOp()==InstructionType.MOVE) {
                         next.setState(Instruction.State.REPLACE);
                         next.referenceInstrId = tempExp.get(curExp);
                     }
