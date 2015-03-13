@@ -37,6 +37,14 @@ public class CP {
         if(root == null)
             return;
 
+        if(root.block.getPhiFuncs()!=null){
+            for(Map.Entry<Integer, Instruction> entry : root.block.getPhiFuncs().entrySet()){
+                Result x=new Result();
+                x.buildResult(Result.ResultType.variable,entry.getKey());
+                x.setSSAVersion(entry.getValue().getInstructionPC());
+                ResultTOInstruction.put(x,entry.getValue().getInstructionPC());
+            }
+        }
         for(Instruction ins : root.block.getInstructions())
         {
             if(ins.isReadInstruction())
@@ -105,11 +113,15 @@ public class CP {
                         left.type = Result.ResultType.constant;
                         left.value = constant;
                     }
-                    else if(ResultTOInstruction.containsKey(left))
-                    {
-                        int pc = ResultTOInstruction.get(left);
-                        left.type = Result.ResultType.instruction;
-                        left.instrRef = pc;
+                    else {
+                        for(Map.Entry<Result, Integer> entry : ResultTOInstruction.entrySet())
+                        {
+                            if(entry.getKey().varIdent==left.varIdent&&entry.getKey().ssaVersion.getVersion()==left.ssaVersion.getVersion()) {
+                                int pc = entry.getValue();
+                                left.type = Result.ResultType.instruction;
+                                left.instrRef = pc;
+                            }
+                        }
                     }
                 }
 
