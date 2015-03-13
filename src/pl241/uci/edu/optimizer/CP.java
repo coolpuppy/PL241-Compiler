@@ -1,5 +1,7 @@
 package pl241.uci.edu.optimizer;
 
+import pl241.uci.edu.ir.BasicBlock;
+import pl241.uci.edu.ir.BlockType;
 import pl241.uci.edu.middleend.Result;
 import pl241.uci.edu.middleend.Instruction;
 import pl241.uci.edu.ir.DominatorTreeNode;
@@ -55,11 +57,17 @@ public class CP {
             {
                 int constant = ins.getLeftResult().value;
                 ResultTOConstant.put(ins.getRightResult(),constant);
+
+                //mark instr as deleted
+                ins.deleted = true;
             }
             else if(ins.isMoveInstruction())
             {
                 int pc = ins.getLeftResult().instrRef;
                 ResultTOInstruction.put(ins.getRightResult(),pc);
+
+                //mark instr as deleted
+                ins.deleted = true;
             }
             //the variable is in the right result
             else if(ins.isMoveVar())
@@ -118,11 +126,114 @@ public class CP {
             }
         }
 
+        if(root.block.getType() == BlockType.IF)
+        {
+            for(Map.Entry<Integer, Instruction> entry : root.block.getJoinBlock().getPhiFunctionGenerator().getPhiInstructionMap().entrySet()){
+                Instruction oldIns = entry.getValue();
+                Result left = new Result(entry.getKey(),oldIns,true);
+
+                int instrId;
+                if(ResultTOConstant.containsKey(left)){
+                    int constant = ResultTOConstant.get(left);
+                    // put constant in result
+                    left.type = Result.ResultType.constant;
+                    left.value = constant;
+                    oldIns.setLeftResult(left);
+                }else if(ResultTOInstruction.containsKey(left)){
+                    instrId = ResultTOInstruction.get(left);
+                    // change result type to instr and assign instr#
+                    left.type = Result.ResultType.instruction;
+                    left.instrRef = instrId;
+                    oldIns.leftRepresentedByInstrId = true;
+                    oldIns.setLeftResult(left);
+                }
+            }
+        }
+        else if(root.block.getType() == BlockType.ELSE && !(root.block.getPreBlock().getType() == BlockType.WHILE_JOIN))
+        {
+            for(Map.Entry<Integer, Instruction> entry : root.block.getJoinBlock().getPhiFunctionGenerator().getPhiInstructionMap().entrySet()){
+                Instruction oldIns = entry.getValue();
+                Result right = new Result(entry.getKey(),oldIns,false);
+
+                int instrId;
+                if(ResultTOConstant.containsKey(right)){
+                    int constant = ResultTOConstant.get(right);
+                    // put constant in result
+                    right.type = Result.ResultType.constant;
+                    right.value = constant;
+                    oldIns.setRightResult(right);
+                }else if(ResultTOInstruction.containsKey(right)){
+                    instrId = ResultTOInstruction.get(right);
+                    // change result type to instr and assign instr#
+                    right.type = Result.ResultType.instruction;
+                    right.instrRef = instrId;
+                    oldIns.leftRepresentedByInstrId = true;
+                    oldIns.setRightResult(right);
+                }
+            }
+        }
+        else if(root.block.getType() == BlockType.DO)
+        {
+            for(Map.Entry<Integer, Instruction> entry : root.block.getBackBlock().getPhiFunctionGenerator().getPhiInstructionMap().entrySet()){
+                Instruction oldIns = entry.getValue();
+                Result left = new Result(entry.getKey(),oldIns,true);
+
+                int instrId;
+                if(ResultTOConstant.containsKey(left)){
+                    int constant = ResultTOConstant.get(left);
+                    // put constant in result
+                    left.type = Result.ResultType.constant;
+                    left.value = constant;
+                    oldIns.setLeftResult(left);
+                }else if(ResultTOInstruction.containsKey(left)){
+                    instrId = ResultTOInstruction.get(left);
+                    // change result type to instr and assign instr#
+                    left.type = Result.ResultType.instruction;
+                    left.instrRef = instrId;
+                    oldIns.leftRepresentedByInstrId = true;
+                    oldIns.setLeftResult(left);
+                }
+            }
+        }
+
+
+
 
         //TODO:update the result in phi function
         for(Map.Entry<Integer, Instruction> entry : root.block.getPhiFunctionGenerator().getPhiInstructionMap().entrySet()){
             Instruction oldIns = entry.getValue();
+            Result left = new Result(entry.getKey(),oldIns,true);
+            Result right = new Result(entry.getKey(),oldIns,false);
 
+            int instrId;
+            if(ResultTOConstant.containsKey(left)){
+                int constant = ResultTOConstant.get(left);
+                // put constant in result
+                left.type = Result.ResultType.constant;
+                left.value = constant;
+                oldIns.setLeftResult(left);
+            }else if(ResultTOInstruction.containsKey(left)){
+                instrId = ResultTOInstruction.get(left);
+                // change result type to instr and assign instr#
+                left.type = Result.ResultType.instruction;
+                left.instrRef = instrId;
+                oldIns.leftRepresentedByInstrId = true;
+                oldIns.setLeftResult(left);
+            }
+            if(ResultTOConstant.containsKey(right)){
+                int constant = ResultTOConstant.get(right);
+                // put constant in result
+                right.type = Result.ResultType.constant;
+                right.value = constant;
+                oldIns.setLeftResult(right);
+            }else if(ResultTOInstruction.containsKey(right)){
+                instrId = ResultTOInstruction.get(right);
+                // change result type to instr and assign instr#
+                right.type = Result.ResultType.instruction;
+                right.instrRef = instrId;
+                oldIns.leftRepresentedByInstrId = true;
+                oldIns.setLeftResult(right);
+            }
         }
 
         for(DominatorTreeNode child : root.children){

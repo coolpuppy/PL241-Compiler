@@ -673,8 +673,8 @@ public class Parser {
             {
                 VariableTable.addGlobalVariable(varIdent);
             }
-
-            curBlock.generateInstruction(InstructionType.LOAD,x,null);
+            //TODO:DO WE NEED TO DO THIS? WHERE TO PLACE LOAD INSTRUCTION?
+            //curBlock.generateInstruction(InstructionType.LOAD,x,null);
             //we add a move at the end of every variable declaration
             curBlock.generateInstruction(InstructionType.MOVE, Result.buildConstant(0), x);
         }
@@ -851,7 +851,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test008";
+        String testname = "test010";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
@@ -865,11 +865,11 @@ public class Parser {
         DominatorTreeGenerator dt = new DominatorTreeGenerator();
         dt.buildDominatorTree(DominatorTreeGenerator.root);
 
-        //vcg.printDominantTree();
+        vcg.printDominantTree();
 //
 //        CP cp = new CP();
 //        cp.CPoptimize(DominatorTreeGenerator.root);
-        vcg.printDominantTree();
+        //vcg.printDominantTree();
 
         CSE cse = new CSE();
         //cse.CSEoptimize(DominatorTreeGenerator.root);

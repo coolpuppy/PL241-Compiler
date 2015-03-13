@@ -49,6 +49,21 @@ public class Result implements Comparable<Result>{
         this.isMove = result.isMove;
     }
 
+    public Result(int varIdent,Instruction ins,boolean isLeft)
+    {
+        this.type = ResultType.variable;
+        if(isLeft)
+        {
+            this.varIdent = varIdent;
+            this.ssaVersion = ins.getLeftSSA();
+        }
+        else
+        {
+            this.varIdent = varIdent;
+            this.ssaVersion = ins.getRightSSA();
+        }
+    }
+
     public void buildResult(ResultType type,int inputValue){
         switch(type) {
             case constant:
