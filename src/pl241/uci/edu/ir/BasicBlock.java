@@ -286,6 +286,30 @@ public class BasicBlock {
         return null;
     }
 
+    /*public void assignNewSSA(int ident, SSAValue ssa, SSAValue newSSA, BasicBlock startBlock){
+        BasicBlock cur = this;
+        while (cur != null) {
+            for(Map.Entry<Integer, Instruction> entry : cur.getPhiFuncs().entrySet()){
+                if(entry.getKey() == ident && entry.getValue().getLeftSSA() == ssa){
+                    entry.getValue().setLeftSSA(newSSA);
+                }
+            }
+            HashSet<Instruction> instrs = startBlock.getAllDoInstructions();
+            for(Instruction instr : instrs){
+                if(instr.getLeftResult() != null && instr.getLeftResult().varIdent == ident && instr.getLeftResult().ssaVersion == ssa){
+                    instr.getLeftResult().ssaVersion = newSSA;
+                }
+                if(instr.getRightResult() != null && instr.getRightResult().varIdent == ident && instr.getRightResult().ssaVersion == ssa){
+                    instr.getRightResult().ssaVersion = newSSA;
+                }
+            }
+            if(cur == startBlock)
+                break;
+            cur = cur.getPredecessor();
+        }
+        return;
+    }*/
+
     public Instruction generateInstruction(InstructionType type,Result r1,Result r2) {
         Instruction newIns = new Instruction(type, r1 == null ? null : r1.deepClone(r1), r2 == null ? null : r2.deepClone(r2));
         this.instructions.add(newIns);

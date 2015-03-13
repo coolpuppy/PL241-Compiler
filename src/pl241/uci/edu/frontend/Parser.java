@@ -476,8 +476,8 @@ public class Parser {
         }
         return null;
     }
-/*
-    private void createPhiInWhileJoinBlocks(BasicBlock curBlock,BasicBlock doEndBlock, BasicBlock joinBlock,HashMap<Integer,ArrayList<SSAValue>> ssaUseChain){
+
+    /*private void createPhiInWhileJoinBlocks(BasicBlock curBlock,BasicBlock doEndBlock, BasicBlock joinBlock,HashMap<Integer,ArrayList<SSAValue>> ssaUseChain){
         HashSet<Integer> phiVars = new HashSet<Integer>();
         phiVars.addAll(doEndBlock.getPhiVars(curBlock));
         HashSet<Integer> curPhiVars = joinBlock.getPhiVars();
@@ -491,8 +491,7 @@ public class Parser {
                 }
             }
         }
-    }
-    */
+    }*/
 
     /*public void updateReferenceForPhiVarInLoopBody(BasicBlock innerJoinBlock, BasicBlock startBlock,
                                                    BasicBlock doLastBlock) throws Throwable {

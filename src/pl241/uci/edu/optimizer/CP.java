@@ -176,6 +176,27 @@ public class CP {
         {
             for(Map.Entry<Integer, Instruction> entry : root.block.getBackBlock().getPhiFunctionGenerator().getPhiInstructionMap().entrySet()){
                 Instruction oldIns = entry.getValue();
+                Result right = new Result(entry.getKey(),oldIns,false);
+
+                int instrId;
+                if(ResultTOConstant.containsKey(right)){
+                    int constant = ResultTOConstant.get(right);
+                    // put constant in result
+                    right.type = Result.ResultType.constant;
+                    right.value = constant;
+                    oldIns.setRightResult(right);
+                }else if(ResultTOInstruction.containsKey(right)){
+                    instrId = ResultTOInstruction.get(right);
+                    // change result type to instr and assign instr#
+                    right.type = Result.ResultType.instruction;
+                    right.instrRef = instrId;
+                    oldIns.rightRepresentedByInstrId = true;
+                    oldIns.setRightResult(right);
+                }
+            }
+        }else if(root.block.getFollowBlock()!=null&&root.block.getFollowBlock().getType()==BlockType.WHILE_JOIN){
+            for(Map.Entry<Integer, Instruction> entry : root.block.getFollowBlock().getPhiFunctionGenerator().getPhiInstructionMap().entrySet()){
+                Instruction oldIns = entry.getValue();
                 Result left = new Result(entry.getKey(),oldIns,true);
 
                 int instrId;
