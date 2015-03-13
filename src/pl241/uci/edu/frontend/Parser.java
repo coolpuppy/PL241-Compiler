@@ -851,7 +851,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test011";
+        String testname = "test010";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
