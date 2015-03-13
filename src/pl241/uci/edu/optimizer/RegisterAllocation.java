@@ -26,35 +26,35 @@ public class RegisterAllocation {
             edgeList = new HashMap<Instruction, List<Instruction>>();
         }
 
-        public void addNode(Instruction instr) {
-            if (!edgeList.containsKey(instr))
-                edgeList.put(instr, new ArrayList<Instruction>());
+        public void addNode(Instruction a) {
+            if (!edgeList.containsKey(a))
+                edgeList.put(a, new ArrayList<Instruction>());
         }
 
-        public void addEdge(Instruction instr1, Instruction instr2) {
-            if (!edgeList.containsKey(instr1))
-                edgeList.put(instr1, new ArrayList<Instruction>());
-            if (!edgeList.containsKey(instr2))
-                edgeList.put(instr2, new ArrayList<Instruction>());
-            if (!isEdge(instr1, instr2)) {
-                edgeList.get(instr1).add(instr2);
-                edgeList.get(instr2).add(instr1);
+        public void addEdge(Instruction a, Instruction b) {
+            if (!edgeList.containsKey(a))
+                edgeList.put(a, new ArrayList<Instruction>());
+            if (!edgeList.containsKey(b))
+                edgeList.put(b, new ArrayList<Instruction>());
+            if (!isEdge(a, b)) {
+                edgeList.get(a).add(b);
+                edgeList.get(b).add(a);
             }
         }
 
-        public List<Instruction> getNeighbors(Instruction instr) {
-            if (!edgeList.containsKey(instr))
+        public List<Instruction> getNeighbors(Instruction a) {
+            if (!edgeList.containsKey(a))
                 return new ArrayList<Instruction>();
             else
-                return edgeList.get(instr);
+                return edgeList.get(a);
         }
 
-        public int getDegree(Instruction instr) {
-            return edgeList.get(instr).size();
+        public int getDegree(Instruction a) {
+            return edgeList.get(a).size();
         }
 
-        public boolean isEdge(Instruction instr1, Instruction instr2) {
-            return edgeList.containsKey(instr1) && edgeList.get(instr1).contains(instr2);
+        public boolean isEdge(Instruction a, Instruction b) {
+            return edgeList.containsKey(a) && edgeList.get(a).contains(b);
         }
 
         public Set<Instruction> getNodes() {
@@ -73,7 +73,7 @@ public class RegisterAllocation {
     }
 
     private Graph interferenceGraph;
-    private Map<DominatorTreeNode, BasicBlockInfo> blockInfoMap;
+    private Map<DominatorTreeNode, BasicBlockInfo> bbInfo;
     private Set<DominatorTreeNode> loopHeaders;
     private Map<Instruction, Integer> colors;
 
@@ -83,19 +83,20 @@ public class RegisterAllocation {
     public Map<Integer, Integer> allocate(DominatorTreeNode b) {
         // Reset allocator
         interferenceGraph = new Graph();
-        blockInfoMap = new HashMap<DominatorTreeNode, BasicBlockInfo>();
+        bbInfo = new HashMap<DominatorTreeNode, BasicBlockInfo>();
         loopHeaders = new HashSet<DominatorTreeNode>();
         colors = new HashMap<Instruction, Integer>();
 
         calcLiveRange(b, null, 1);
-        //calcLiveRange(b, null, 2);
+        calcLiveRange(b, null, 2);
         colorGraph();
-        //saveVCGGraph("vcg/"+b.block.getId() + "interference.vcg"); // For debugging
+        saveVCGGraph("vcg/"+b.block.getId() + "interference.vcg"); // For debugging
 
         Map<Integer, Integer> coloredIDs = new HashMap<Integer, Integer>();
         for (Instruction i : colors.keySet()) {
             coloredIDs.put(i.getInstructionPC(), colors.get(i));
         }
+
         return coloredIDs;
     }
 
@@ -124,9 +125,8 @@ public class RegisterAllocation {
         } while (maxDegree != null);
     }
 
-    public void printVCG(String filename) {
+    private void saveVCGGraph(String filename) {
         try {
-            filename="vcg/"+filename + "interference.vcg";
             BufferedWriter out = new BufferedWriter(new FileWriter(new File(filename)));
 
             out.write("graph: {\n");
@@ -161,55 +161,65 @@ public class RegisterAllocation {
         }
     }
 
-    private Set<Instruction> calcLiveRange(DominatorTreeNode curBlock, DominatorTreeNode preBlock, int pass) {
+    private Set<Instruction> calcLiveRange(DominatorTreeNode b, DominatorTreeNode last, int pass) {
         Set<Instruction> live = new HashSet<Instruction>();
 
-        if (!blockInfoMap.containsKey(curBlock))
-            blockInfoMap.put(curBlock, new BasicBlockInfo());
+        if (!bbInfo.containsKey(b))
+            bbInfo.put(b, new BasicBlockInfo());
 
-        if (curBlock != null) {
-            if (blockInfoMap.get(curBlock).visited >= pass) {
-                live.addAll(blockInfoMap.get(curBlock).live);
+        if (b != null) {
+            if (bbInfo.get(b).visited >= pass) {
+                live.addAll(bbInfo.get(b).live);
             } else {
-                blockInfoMap.get(curBlock).visited += 1;
-                if (blockInfoMap.get(curBlock).visited == 2) {
+                bbInfo.get(b).visited += 1;
+                if (bbInfo.get(b).visited == 2) {
                     for (DominatorTreeNode h : loopHeaders)
-                        blockInfoMap.get(curBlock).live.addAll(blockInfoMap.get(h).live);
+                        bbInfo.get(b).live.addAll(bbInfo.get(h).live);
                 }
 
-                //int index = 0;
-                for (DominatorTreeNode child : curBlock.getChildren()) {
-                    if (curBlock.block.getType() == BlockType.WHILE_JOIN )
-                        loopHeaders.add(curBlock);
+                int index = 0;
+                for (DominatorTreeNode child : b.getChildren()) {
+                    if (b.block.getType() == BlockType.WHILE_JOIN && index == 0)
+                        loopHeaders.add(b);
 
-                    live.addAll(calcLiveRange(child, curBlock, pass));
-                    //index += 1;
+                    live.addAll(calcLiveRange(child, b, pass));
+                    index += 1;
 
-                    //if (curBlock.block.getType() == BlockType.WHILE_JOIN )
-                    //    loopHeaders.remove(curBlock);
+                    if (b.block.getType() == BlockType.WHILE_JOIN && index == 0)
+                        loopHeaders.remove(b);
                 }
                 List<Instruction> reverse = new ArrayList<Instruction>();
-                reverse.addAll(curBlock.block.getInstructions());
+                reverse.addAll(b.block.getInstructions());
                 Collections.reverse(reverse);
                 for (Instruction ins : reverse) {
-                    if (ins.getOp() != InstructionType.PHI && (!ins.deleted) && ins.getOp()!=InstructionType.END && ins.getOp()!= InstructionType.READ && ins.getOp()!= InstructionType.WRITE) {
+                    if (ins.getOp() != InstructionType.PHI && (!ins.deleted) && ins.getOp()!=InstructionType.END) {
                         live.remove(ins);
                         interferenceGraph.addNode(ins);
                         for (Instruction other : live) {
                             interferenceGraph.addEdge(ins, other);
                         }
                         if(ins.getLeftResult()!= null && ins.getLeftResult().type == Result.ResultType.instruction)
-                            live.add(b.block.getInstructions().get(ins.getLeftResult().instrRef));
+                        {
+                            if(last != null && last.block.findInstruction(ins.getLeftResult().instrRef) != null)
+                                live.add(last.block.findInstruction(ins.getLeftResult().instrRef));
+                            else if(b.block.findInstruction(ins.getLeftResult().instrRef)!=null)
+                                live.add(b.block.findInstruction(ins.getLeftResult().instrRef));
+                        }
                         if(ins.getRightResult()!= null && ins.getRightResult().type == Result.ResultType.instruction)
-                            live.add(b.block.getInstructions().get(ins.getRightResult().instrRef));
+                        {
+                            if(last != null && last.block.findInstruction(ins.getRightResult().instrRef) != null)
+                                live.add(last.block.findInstruction(ins.getRightResult().instrRef));
+                            else if(b.block.findInstruction(ins.getRightResult().instrRef)!=null)
+                                live.add(b.block.findInstruction(ins.getRightResult().instrRef));
+                        }
                     }
                 }
 
-                blockInfoMap.get(curBlock).live = new HashSet<Instruction>();
-                blockInfoMap.get(curBlock).live.addAll(live);
+                bbInfo.get(b).live = new HashSet<Instruction>();
+                bbInfo.get(b).live.addAll(live);
             }
             List<Instruction> reverse = new ArrayList<Instruction>();
-            reverse.addAll(curBlock.block.getInstructions());
+            reverse.addAll(b.block.getInstructions());
             Collections.reverse(reverse);
             for (Instruction ins : reverse) {
                 if (ins.getOp() == InstructionType.PHI) {
@@ -218,9 +228,19 @@ public class RegisterAllocation {
                     for (Instruction other : live)
                         interferenceGraph.addEdge(ins, other);
                     if(ins.getLeftResult()!= null && ins.getLeftResult().type == Result.ResultType.instruction)
-                        live.add(b.block.getInstructions().get(ins.getLeftResult().instrRef));
+                    {
+                        if(last != null && last.block.findInstruction(ins.getLeftResult().instrRef) != null)
+                            live.add(last.block.findInstruction(ins.getLeftResult().instrRef));
+                        else if(b.block.findInstruction(ins.getLeftResult().instrRef)!=null)
+                            live.add(b.block.findInstruction(ins.getLeftResult().instrRef));
+                    }
                     if(ins.getRightResult()!= null && ins.getRightResult().type == Result.ResultType.instruction)
-                        live.add(b.block.getInstructions().get(ins.getRightResult().instrRef));
+                    {
+                        if(last != null && last.block.findInstruction(ins.getRightResult().instrRef) != null)
+                            live.add(last.block.findInstruction(ins.getRightResult().instrRef));
+                        else if(b.block.findInstruction(ins.getRightResult().instrRef)!=null)
+                            live.add(b.block.findInstruction(ins.getRightResult().instrRef));
+                    }
                 }
             }
         }
