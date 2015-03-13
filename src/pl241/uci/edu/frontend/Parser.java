@@ -368,8 +368,8 @@ public class Parser {
                     } else {
                         curBlock.setElseBlock(joinBlock);
                     }
-                    updatePhiFuncsInJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
-                    createPhiInIfJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
+                    //updatePhiFuncsInJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
+                    //createPhiInIfJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
                     VariableTable.setSSAUseChain(ssaUseChain);
                     updateReferenceForPhiVarInJoinBlock(joinBlock);
                     return joinBlock;
@@ -935,7 +935,15 @@ public class Parser {
             if (d.type == Result.ResultType.constant) {
                 //generate ADD prev.reference constant
                 ins = curBlock.generateInstruction(InstructionType.ADD, Result.buildConstant(d.value), ref);
-            } else {
+            }
+            else if(d.type == Result.ResultType.variable)
+            {
+                //generate ADD instruction.referenceID array.dimension
+                Result ref1 = new Result();
+                ref1.buildResult(Result.ResultType.instruction, d.ssaVersion.getVersion());
+                ins = curBlock.generateInstruction(InstructionType.ADD, ref1, ref);
+            }
+            else {
                 //generate ADD instruction.referenceID array.dimension
                 Result ref1 = new Result();
                 ref1.buildResult(Result.ResultType.instruction, d.instrRef);
@@ -955,7 +963,14 @@ public class Parser {
             if (d.type == Result.ResultType.constant) {
                 //generate ADDA prev.reference constant
                 adda = curBlock.generateInstruction(InstructionType.ADDA, Result.buildConstant(d.value), Result.buildConstant(array.arrayAddress));
-            } else {
+            }
+            else if(d.type == Result.ResultType.variable) {
+                //generate ADDA instruction.referenceID array.dimension
+                Result ref = new Result();
+                ref.buildResult(Result.ResultType.instruction, d.ssaVersion.getVersion());
+                adda = curBlock.generateInstruction(InstructionType.ADDA, ref, Result.buildConstant(array.arrayAddress));
+            }
+            else {
                 //generate ADDA instruction.referenceID array.dimension
                 Result ref = new Result();
                 ref.buildResult(Result.ResultType.instruction, d.instrRef);
@@ -966,7 +981,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test020";
+        String testname = "test032";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
