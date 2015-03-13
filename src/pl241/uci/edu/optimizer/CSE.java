@@ -1,5 +1,6 @@
 package pl241.uci.edu.optimizer;
 
+import pl241.uci.edu.ir.BlockType;
 import pl241.uci.edu.ir.DominatorTreeNode;
 import pl241.uci.edu.ir.ExpressionNode;
 import pl241.uci.edu.middleend.Instruction;
@@ -100,6 +101,19 @@ public class CSE {
             }
             if(right != null && right.type == Result.ResultType.instruction && replaceInstruction.containsKey(right.instrRef)){
                 right.instrRef = replaceInstruction.get(right.instrRef);
+            }
+        }
+        if(root.block.getType()== BlockType.DO){
+            for(Map.Entry<Integer, Instruction> entry : root.block.getBackBlock().getPhiFunctionGenerator().getPhiInstructionMap().entrySet()){
+                Instruction instr = entry.getValue();
+                Result left = instr.getLeftResult();
+                Result right = instr.getRightResult();
+                if(left != null && left.type == Result.ResultType.instruction && replaceInstruction.containsKey(left.instrRef)){
+                    left.instrRef = replaceInstruction.get(left.instrRef);
+                }
+                if(right != null && right.type == Result.ResultType.instruction && replaceInstruction.containsKey(right.instrRef)){
+                    right.instrRef = replaceInstruction.get(right.instrRef);
+                }
             }
         }
 
