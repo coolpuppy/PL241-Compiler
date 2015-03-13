@@ -86,7 +86,6 @@ public class Parser {
         ArrayList<Result> dimensions=new ArrayList<Result>();
         if(curToken==Token.IDENTIFIER){
             designator.buildResult(Result.ResultType.variable,scanner.getVarIdent());
-
             Next();
             while(curToken==Token.OPEN_BRACKET){
                 Next();
@@ -188,13 +187,10 @@ public class Parser {
             Token operator=curToken;
             Next();
             Result y=term(curBlock,joinBlocks,function);
-            x.type = Result.ResultType.instruction;
+            x.instrRef=Instruction.getPc();
             //generate the instruction
-            if(!y.isMove)
-                y.type = Result.ResultType.instruction;
-            irCodeGenerator.generateArithmeticIC(curBlock, operator, x, y);
+            irCodeGenerator.generateArithmeticIC(curBlock,operator,x,y);
             ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
-            x.instrRef = Instruction.getPc()-1;
 
         }
         if(!x.isMove)
@@ -378,10 +374,10 @@ public class Parser {
                     if (elseEndBlock != null) {
                         elseEndBlock.setJoinBlock(joinBlock);
                     } else {
-                        curBlock.setElseBlock(joinBlock);
+                        //curBlock.setElseBlock(joinBlock);
                     }
                     //updatePhiFuncsInJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
-                    createPhiInIfJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
+                    //createPhiInIfJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
                     VariableTable.setSSAUseChain(ssaUseChain);
                     updateReferenceForPhiVarInJoinBlock(joinBlock);
                     return joinBlock;
@@ -400,7 +396,7 @@ public class Parser {
         return null;
     }
 
-    private void createPhiInIfJoinBlocks(BasicBlock curBlock, BasicBlock ifEndBlock, BasicBlock elseEndBlock, BasicBlock joinBlock, HashMap<Integer, ArrayList<SSAValue>> ssaUseChain)  throws Error {
+    /*private void createPhiInIfJoinBlocks(BasicBlock curBlock, BasicBlock ifEndBlock, BasicBlock elseEndBlock, BasicBlock joinBlock, HashMap<Integer, ArrayList<SSAValue>> ssaUseChain)  throws Error {
         HashSet<Integer> phiVars = new HashSet<Integer>();
         HashSet<Integer> ifPhiVars = ifEndBlock.getPhiVars(curBlock);
         phiVars.addAll(ifPhiVars);
@@ -435,7 +431,7 @@ public class Parser {
                 joinBlock.updatePhiFunction(phiVar, ssaMap.get(phiVar).get(ssaMap.get(phiVar).size() - 1), elseLastBlock.getType());
             }
         }
-    }
+    }*/
 
     private void updateReferenceForPhiVarInJoinBlock(BasicBlock joinBlock) {
         for (Map.Entry<Integer, Instruction> entry : joinBlock.getPhiFuncs().entrySet()) {
@@ -524,7 +520,7 @@ public class Parser {
             if (!curPhiVars.contains(phiVar)) {
                 Instruction curInstr = joinBlock.createPhiFunction(phiVar);
                 joinBlock.updatePhiFunction(phiVar, doEndBlock.findLastSSA(phiVar, curBlock), doEndBlock.getType());
-                joinBlock.updatePhiFunction(phiVar, ssaUseChain.get(phiVar).get(ssaUseChain.get(phiVar).size() - 1), BlockType.IF);
+                joinBlock.updatePhiFunction(phiVar, ssaUseChain.get(phiVar).get(ssaUseChain.get(phiVar).size() - 1),BlockType.IF );
                 if (joinBlock.getType() == BlockType.WHILE_JOIN) {
                     doEndBlock.assignNewSSA(phiVar, ssaUseChain.get(phiVar).get(ssaUseChain.get(phiVar).size() - 1), new SSAValue(curInstr.getInstructionPC()), curBlock);
                 }
@@ -533,9 +529,8 @@ public class Parser {
     }
 
     public void updateReferenceForPhiVarInLoopBody(BasicBlock innerJoinBlock, BasicBlock startBlock, BasicBlock doLastBlock) {
-        for (Map.Entry<Integer, Instruction> entry : innerJoinBlock.getPhiFuncs().entrySet()) {
+        for (Map.Entry<Integer, Instruction> entry : innerJoinBlock.getPhiFuncs().entrySet())
             innerJoinBlock.updateVarReferenceToPhi(entry.getKey(), entry.getValue().getLeftSSA().getVersion(), entry.getValue().getInstructionPC(), startBlock, doLastBlock);
-        }
     }
 
     //returnStatement = “return” [ expression ] .
@@ -1012,7 +1007,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test033";
+        String testname = "test032";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
@@ -1034,7 +1029,7 @@ public class Parser {
 
         CSE cse = new CSE();
         cse.CSEoptimize(DominatorTreeGenerator.root);
-        //vcg.printDominantTree();
+        vcg.printDominantTree();
 
         RegisterAllocation ra = new RegisterAllocation();
         //ra.allocate(DominatorTreeGenerator.root);
