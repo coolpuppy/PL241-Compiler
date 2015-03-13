@@ -130,7 +130,7 @@ public class Result implements Comparable<Result>{
 
     @Override
     public int hashCode() {
-        return this.varIdent * 17 + this.ssaVersion.getVersion() * 31;
+        return this.varIdent * 17 + this.ssaVersion.hashCode() * 31;
     }
 
     public boolean equals(Object other){
