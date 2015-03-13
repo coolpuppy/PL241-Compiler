@@ -86,6 +86,7 @@ public class Parser {
         ArrayList<Result> dimensions=new ArrayList<Result>();
         if(curToken==Token.IDENTIFIER){
             designator.buildResult(Result.ResultType.variable,scanner.getVarIdent());
+
             Next();
             while(curToken==Token.OPEN_BRACKET){
                 Next();
@@ -187,10 +188,13 @@ public class Parser {
             Token operator=curToken;
             Next();
             Result y=term(curBlock,joinBlocks,function);
-            x.instrRef=Instruction.getPc();
+            x.type = Result.ResultType.instruction;
             //generate the instruction
-            irCodeGenerator.generateArithmeticIC(curBlock,operator,x,y);
+            if(!y.isMove)
+                y.type = Result.ResultType.instruction;
+            irCodeGenerator.generateArithmeticIC(curBlock, operator, x, y);
             ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
+            x.instrRef = Instruction.getPc()-1;
 
         }
         if(!x.isMove)
@@ -1008,7 +1012,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test008";
+        String testname = "test031";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
@@ -1017,20 +1021,23 @@ public class Parser {
 //        System.out.println(ControlFlowGraph.delUseChain.yDefUseChains);
 
         VCGGraphGenerator vcg = new VCGGraphGenerator(testname);
-        //vcg.printCFG();
+        vcg.printCFG();
 
         DominatorTreeGenerator dt = new DominatorTreeGenerator();
         dt.buildDominatorTree(DominatorTreeGenerator.root);
 
         //vcg.printDominantTree();
 
+        VCGGraphGenerator vcg_cp = new VCGGraphGenerator(testname+ "_CP");
         CP cp = new CP();
         cp.CPoptimize(DominatorTreeGenerator.root);
-//        vcg.printDominantTree();
+        vcg_cp.printDominantTree();
 
+
+        VCGGraphGenerator vcg_cse = new VCGGraphGenerator(testname+ "_CSE");
         CSE cse = new CSE();
         cse.CSEoptimize(DominatorTreeGenerator.root);
-        //vcg.printDominantTree();
+        vcg_cse.printDominantTree();
 
         RegisterAllocation ra = new RegisterAllocation();
         ra.allocate(DominatorTreeGenerator.root);
