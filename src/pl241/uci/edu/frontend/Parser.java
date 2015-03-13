@@ -618,6 +618,13 @@ public class Parser {
             {
                 x.setArrayDimension(r);
                 x.isArray = true;
+                x.setArrayAddress();
+
+                int length = 0;
+                //calculate the length of array
+                for(int i = r.size() -1  ; i >=0;i--)
+                    length = length + r.get(i).value * (int)(Math.pow(4,i));
+                x.updateArrayAddress(length);
             }
 
             //declare the variable
