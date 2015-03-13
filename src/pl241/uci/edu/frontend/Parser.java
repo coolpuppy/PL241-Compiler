@@ -109,7 +109,7 @@ public class Parser {
             designator.designatorDimension = dimensions;
 
             Result arr = null;
-            if(function != null) {
+            if(function != null&&function.localArray.containsKey(designator.varIdent)) {
                 arr = function.localArray.get(designator.varIdent);
             }
             else
@@ -190,8 +190,11 @@ public class Parser {
             x.instrRef=Instruction.getPc();
             //generate the instruction
             irCodeGenerator.generateArithmeticIC(curBlock,operator,x,y);
+            if(!y.isMove)
+                y.type = Result.ResultType.instruction;
+            irCodeGenerator.generateArithmeticIC(curBlock, operator, x, y);
             ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
-
+            x.instrRef = Instruction.getPc()-1;
         }
         if(!x.isMove)
             x.type = Result.ResultType.instruction;
@@ -528,7 +531,7 @@ public class Parser {
         }
     }
 
-    public void updateReferenceForPhiVarInLoopBody(BasicBlock innerJoinBlock, BasicBlock startBlock, BasicBlock doLastBlock) {
+    public void updateReferenceForPhiVarInLoopBody(BasicBlock innerJoinBlock, BasicBlock startBlock, BasicBlock doLastBlock)  {
         for (Map.Entry<Integer, Instruction> entry : innerJoinBlock.getPhiFuncs().entrySet())
             innerJoinBlock.updateVarReferenceToPhi(entry.getKey(), entry.getValue().getLeftSSA().getVersion(), entry.getValue().getInstructionPC(), startBlock, doLastBlock);
     }
@@ -1007,7 +1010,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test032";
+        String testname = "test033";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
