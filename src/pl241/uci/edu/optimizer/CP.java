@@ -172,7 +172,7 @@ public class CP {
                 }
             }
         }
-        else if(root.block.getType() == BlockType.DO)
+        else if(root.block.getBackBlock()!=null)
         {
             for(Map.Entry<Integer, Instruction> entry : root.block.getBackBlock().getPhiFunctionGenerator().getPhiInstructionMap().entrySet()){
                 Instruction oldIns = entry.getValue();

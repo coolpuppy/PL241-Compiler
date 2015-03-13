@@ -366,10 +366,10 @@ public class Parser {
                     if (elseEndBlock != null) {
                         elseEndBlock.setJoinBlock(joinBlock);
                     } else {
-                        curBlock.setElseBlock(joinBlock);
+                        //curBlock.setElseBlock(joinBlock);
                     }
-                    updatePhiFuncsInJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
-                    createPhiInIfJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
+                    //updatePhiFuncsInJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
+                    //createPhiInIfJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
                     VariableTable.setSSAUseChain(ssaUseChain);
                     updateReferenceForPhiVarInJoinBlock(joinBlock);
                     return joinBlock;
@@ -966,7 +966,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test020";
+        String testname = "test025";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
@@ -975,16 +975,16 @@ public class Parser {
 //        System.out.println(ControlFlowGraph.delUseChain.yDefUseChains);
 
         VCGGraphGenerator vcg = new VCGGraphGenerator(testname);
-        vcg.printCFG();
+        //vcg.printCFG();
 
-//        DominatorTreeGenerator dt = new DominatorTreeGenerator();
-//        dt.buildDominatorTree(DominatorTreeGenerator.root);
+        DominatorTreeGenerator dt = new DominatorTreeGenerator();
+        dt.buildDominatorTree(DominatorTreeGenerator.root);
 
         //vcg.printDominantTree();
 
-//        CP cp = new CP();
-//        cp.CPoptimize(DominatorTreeGenerator.root);
-//        vcg.printDominantTree();
+        CP cp = new CP();
+        cp.CPoptimize(DominatorTreeGenerator.root);
+        //vcg.printDominantTree();
 
         CSE cse = new CSE();
         cse.CSEoptimize(DominatorTreeGenerator.root);

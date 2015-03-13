@@ -247,6 +247,10 @@ public class Instruction {
         return (!(result1 == null || result2 == null)) && ArithOp.contains(op) || BranchOp.contains(op) && result1.type == Result.ResultType.variable && result2.type == Result.ResultType.variable;
     }
 
+    public boolean isExpressionOp(){
+        return (op==InstructionType.NEG||op==InstructionType.ADD||op==InstructionType.SUB||op==InstructionType.MUL||op==InstructionType.DIV);
+    }
+
     public boolean isLoadInstruction()
     {
         return this.op == InstructionType.LOAD;

@@ -45,71 +45,65 @@ public class CSE {
         if(root == null)
             return;
 
-        for(Instruction ins : root.block.getInstructions())
-        {
-            if(ins.deleted)
+        for(Instruction ins : root.block.getInstructions()) {
+            if (ins.deleted) {
                 continue;
+            }
 
             Result left = ins.getLeftResult();
             Result right = ins.getRightResult();
 
-            if(left != null && left.type == Result.ResultType.instruction && replaceInstruction.containsKey(left.instrRef))
+            if (left != null && left.type == Result.ResultType.instruction && replaceInstruction.containsKey(left.instrRef))
                 left.instrRef = replaceInstruction.get(left.instrRef);
 
-            if(right != null && right.type == Result.ResultType.instruction && replaceInstruction.containsKey(right.instrRef))
+            if (right != null && right.type == Result.ResultType.instruction && replaceInstruction.containsKey(right.instrRef))
                 right.instrRef = replaceInstruction.get(right.instrRef);
 
 
-            if(ins.isArithOrBranch())
-            {
-                HashMap<ExpressionNode,Integer> tempExp = cse.get(ins.getOp());
-                ExpressionNode newExp = new ExpressionNode(left,right);
-                if(!tempExp.containsKey(newExp))
-                {
-                    tempExp.put(newExp,ins.getReferenceInstrId());
+            if (ins.isExpressionOp()) {
+                HashMap<ExpressionNode, Integer> tempExp = cse.get(ins.getOp());
+                ExpressionNode curExp = new ExpressionNode(left, right);
+                if (!tempExp.containsKey(curExp)) {
+                    tempExp.put(curExp, ins.getInstructionPC());
 
                     //mark next instruction as replace
                     Instruction next = root.block.getNextIntruction(ins);
-                    if(next != null && !next.deleted && next.getOp() == InstructionType.MOVE)
-                    {
+                    if (next != null && !next.deleted && next.getOp() == InstructionType.MOVE) {
                         next.setState(Instruction.State.REPLACE);
-                        next.referenceInstrId = ins.referenceInstrId;
+                        next.referenceInstrId = ins.getInstructionPC();
                     }
-                }
-                else
-                {
+                } else {
                     //mark this instruction as deleted
                     ins.deleted = true;
 
                     //mark next intruction as replce
                     Instruction next = root.block.getNextIntruction(ins);
-                    if(next != null)
-                    {
+                    if (next != null&&!next.deleted) {
                         next.setState(Instruction.State.REPLACE);
-                        next.referenceInstrId = tempExp.get(newExp);
+                        next.referenceInstrId = tempExp.get(curExp);
                     }
-                    replaceInstruction.put(ins.getInstructionPC(),tempExp.get(newExp));
+                    replaceInstruction.put(ins.getInstructionPC(), tempExp.get(curExp));
                 }
             }
+        }
 
             //update the result in phi function
-            for(Map.Entry<Integer, Instruction> entry : root.block.getPhiFunctionGenerator().getPhiInstructionMap().entrySet()){
-                Instruction instr = entry.getValue();
-                left = instr.getLeftResult();
-                right = instr.getRightResult();
-                if(left != null && left.type == Result.ResultType.instruction && replaceInstruction.containsKey(left.instrRef)){
-                    left.instrRef = replaceInstruction.get(left.instrRef);
-                }
-                if(right != null && right.type == Result.ResultType.instruction && replaceInstruction.containsKey(right.instrRef)){
-                    right.instrRef = replaceInstruction.get(right.instrRef);
-                }
+        for(Map.Entry<Integer, Instruction> entry : root.block.getPhiFunctionGenerator().getPhiInstructionMap().entrySet()){
+            Instruction instr = entry.getValue();
+            Result left = instr.getLeftResult();
+            Result right = instr.getRightResult();
+            if(left != null && left.type == Result.ResultType.instruction && replaceInstruction.containsKey(left.instrRef)){
+                left.instrRef = replaceInstruction.get(left.instrRef);
             }
+            if(right != null && right.type == Result.ResultType.instruction && replaceInstruction.containsKey(right.instrRef)){
+                right.instrRef = replaceInstruction.get(right.instrRef);
+            }
+        }
 
             //do CSE to all the child nodes
-            for(DominatorTreeNode child:root.getChildren())
-            {
-                CSEoptimizaRecursion(child,new HashMap<Integer, Integer>(replaceInstruction));
-            }
+        for(DominatorTreeNode child:root.getChildren())
+        {
+            CSEoptimizaRecursion(child,new HashMap<Integer, Integer>(replaceInstruction));
         }
     }
 }
