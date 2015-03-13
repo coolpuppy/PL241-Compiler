@@ -198,7 +198,10 @@ public class RegisterAllocation {
                         for (Instruction other : live) {
                             interferenceGraph.addEdge(ins, other);
                         }
-                        live.add(ControlFlowGraph.getInstruction(ins.getInstructionPC()));
+                        if(ins.getLeftResult()!= null && ins.getLeftResult().type == Result.ResultType.instruction)
+                            live.add(b.block.getInstructions().get(ins.getLeftResult().instrRef));
+                        if(ins.getRightResult()!= null && ins.getRightResult().type == Result.ResultType.instruction)
+                            live.add(b.block.getInstructions().get(ins.getRightResult().instrRef));
                     }
                 }
 
@@ -214,7 +217,10 @@ public class RegisterAllocation {
                     interferenceGraph.addNode(ins);
                     for (Instruction other : live)
                         interferenceGraph.addEdge(ins, other);
-                    live.add(ControlFlowGraph.getInstruction(ins.getInstructionPC()));
+                    if(ins.getLeftResult()!= null && ins.getLeftResult().type == Result.ResultType.instruction)
+                        live.add(b.block.getInstructions().get(ins.getLeftResult().instrRef));
+                    if(ins.getRightResult()!= null && ins.getRightResult().type == Result.ResultType.instruction)
+                        live.add(b.block.getInstructions().get(ins.getRightResult().instrRef));
                 }
             }
         }

@@ -1010,7 +1010,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test032";
+        String testname = "RA";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
@@ -1019,22 +1019,24 @@ public class Parser {
 //        System.out.println(ControlFlowGraph.delUseChain.yDefUseChains);
 
         VCGGraphGenerator vcg = new VCGGraphGenerator(testname);
-        //vcg.printCFG();
+        vcg.printCFG();
 
         DominatorTreeGenerator dt = new DominatorTreeGenerator();
         dt.buildDominatorTree(DominatorTreeGenerator.root);
 
         //vcg.printDominantTree();
 
+        VCGGraphGenerator vcg_cp = new VCGGraphGenerator(testname + "_CP");
         CP cp = new CP();
         cp.CPoptimize(DominatorTreeGenerator.root);
-//        vcg.printDominantTree();
+        vcg_cp.printDominantTree();
 
+        VCGGraphGenerator vcg_cse = new VCGGraphGenerator(testname + "_CSE");
         CSE cse = new CSE();
         cse.CSEoptimize(DominatorTreeGenerator.root);
-        vcg.printDominantTree();
+        vcg_cse.printDominantTree();
 
         RegisterAllocation ra = new RegisterAllocation();
-        //ra.allocate(DominatorTreeGenerator.root);
+        ra.allocate(DominatorTreeGenerator.root);
     }
 }
