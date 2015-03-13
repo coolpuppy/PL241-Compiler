@@ -23,8 +23,13 @@ public class Result implements Comparable<Result>{
     public BasicBlock branchBlock;
     public int instrRef;
     public boolean isMove = true;
+
+    //use in array
     public boolean isArray = false;
     public boolean isArrayDesignator = false;
+    public static int arrayAddressCounter = 0;
+    public int arrayAddress;
+
 
     //for the define of a array
     public ArrayList<Result> arrayDimension = new ArrayList<Result>();
@@ -171,5 +176,15 @@ public class Result implements Comparable<Result>{
     public void setArrayDimension(ArrayList<Result> r)
     {
         this.arrayDimension = r;
+    }
+
+    public static void updateArrayAddressCounter(int length)
+    {
+        arrayAddressCounter  = arrayAddressCounter + length;
+    }
+
+    public void setArrayAddress(int address)
+    {
+        this.arrayAddress = address;
     }
 }

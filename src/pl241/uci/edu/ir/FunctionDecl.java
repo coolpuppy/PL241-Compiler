@@ -1,6 +1,8 @@
 package pl241.uci.edu.ir;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import pl241.uci.edu.middleend.Result;
 import pl241.uci.edu.ir.BlockType;
 
@@ -16,6 +18,9 @@ public class FunctionDecl {
     //id of the global variable
     private ArrayList<Integer> globalVariables;
 
+    //store the definition of array definition
+    public HashMap<Integer,Result> localArray;
+
     //function parameters
     private ArrayList<Result> parameters;
 
@@ -29,6 +34,7 @@ public class FunctionDecl {
         globalVariables = new ArrayList<Integer>();
         parameters = new ArrayList<Result>();
         returnInstr = new Result();
+        localArray = new HashMap<>();
     }
 
     public void addLocalVariable(int localVariable){

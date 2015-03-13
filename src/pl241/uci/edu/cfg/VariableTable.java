@@ -1,6 +1,8 @@
 package pl241.uci.edu.cfg;
 
+import pl241.uci.edu.middleend.Result;
 import pl241.uci.edu.middleend.SSAValue;
+import pl241.uci.edu.frontend.Scanner;
 
 import java.util.*;
 
@@ -15,11 +17,16 @@ public class VariableTable {
     //store the SSA form variables which have the same address
     private static HashMap<Integer,ArrayList<SSAValue>> SSAUseChain;
 
+    //store the definition of array
+    public static HashMap<Integer,Result> ArrayDefinition;
+
     public VariableTable()
     {
         GlobalVariableIdent = new HashSet<Integer>();
 
         SSAUseChain = new HashMap<Integer,ArrayList<SSAValue>>();
+
+        ArrayDefinition = new HashMap<Integer,Result>();
     }
 
     public static void addGlobalVariable(int varIdent)
@@ -31,6 +38,7 @@ public class VariableTable {
     {
         if(!SSAUseChain.containsKey(varIdent))
         {
+            System.out.println(Scanner.ident.get(varIdent));
             Error("Cannot find address " + varIdent + " ! get latest version of SSA failed!");
             return null;
         }

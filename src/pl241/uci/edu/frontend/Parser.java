@@ -60,9 +60,14 @@ public class Parser {
 
     private IRCodeGenerator irCodeGenerator;
 
+    private Result ref;
+
+
+
     public Parser (String path)throws IOException{
         scanner=new Scanner(path);
         irCodeGenerator=new IRCodeGenerator();
+        ref = new Result();
         new ControlFlowGraph();
         new VariableTable();
     }
@@ -76,7 +81,7 @@ public class Parser {
     }
 
     //designator = ident{ "[" expression "]" }.
-    private Result designator(BasicBlock curBlock,Stack<BasicBlock>joinBlocks) throws IOException,Error{
+    private Result designator(BasicBlock curBlock,Stack<BasicBlock>joinBlocks,FunctionDecl function) throws IOException,Error{
         Result designator=new Result();
         ArrayList<Result> dimensions=new ArrayList<Result>();
         if(curToken==Token.IDENTIFIER){
@@ -84,7 +89,7 @@ public class Parser {
             Next();
             while(curToken==Token.OPEN_BRACKET){
                 Next();
-                dimensions.add(expression(curBlock,joinBlocks));
+                dimensions.add(expression(curBlock,joinBlocks,function));
                 if(curToken==Token.CLOSE_BRACKET){
                     Next();
                 }
@@ -102,15 +107,29 @@ public class Parser {
         else{
             designator.isArrayDesignator = true;
             designator.designatorDimension = dimensions;
+
+            Result arr = null;
+            if(function != null) {
+                arr = function.localArray.get(designator.varIdent);
+            }
+            else
+                arr = VariableTable.ArrayDefinition.get(designator.varIdent);
+
+            //calculate the instruction of array address
+            Instruction ins = calculateArray(curBlock, arr, dimensions);
+
+            //generate LOADADD
+            this.ref.buildResult(Result.ResultType.instruction,ins.getInstructionPC());
+            curBlock.generateInstruction(InstructionType.LOADADD,this.ref,null);
             return designator;
         }
     }
 
     //factor = designator | number | “(“ expression “)” | funcCall .
-    private Result factor(BasicBlock curBlock,Stack<BasicBlock>joinBlocks) throws IOException,Error{
+    private Result factor(BasicBlock curBlock,Stack<BasicBlock>joinBlocks,FunctionDecl function) throws IOException,Error{
         Result factor=new Result();
         if(curToken==Token.IDENTIFIER){
-            factor=designator(curBlock,joinBlocks);
+            factor=designator(curBlock,joinBlocks,function);
             factor.ssaVersion= VariableTable.getLatestVersion(factor.varIdent);
         }
         else if(curToken==Token.NUMBER){
@@ -119,7 +138,7 @@ public class Parser {
         }
         else if(curToken==Token.OPEN_PARENTHESIS){
             Next();
-            factor=expression(curBlock,joinBlocks);
+            factor=expression(curBlock,joinBlocks,function);
             if(curToken==Token.CLOSE_PARENTHESIS){
                 Next();
             }
@@ -137,14 +156,15 @@ public class Parser {
     }
 
     //term = factor { (“*” | “/”) factor}.
-    private Result term(BasicBlock curBlock,Stack<BasicBlock>joinBlocks) throws IOException,Error{
-        Result x=factor(curBlock,joinBlocks);
+    private Result term(BasicBlock curBlock,Stack<BasicBlock>joinBlocks,FunctionDecl function) throws IOException,Error{
+        Result x=factor(curBlock,joinBlocks,function);
         while(curToken==Token.TIMES||curToken==Token.DIVIDE){
             Token operator=curToken;
             Next();
             x.isMove = false;
-            Result y=factor(curBlock,joinBlocks);
+            Result y=factor(curBlock,joinBlocks,function);
             x.instrRef= Instruction.getPc();
+
             irCodeGenerator.generateArithmeticIC(curBlock,operator,x,y);
             ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
         }
@@ -152,18 +172,19 @@ public class Parser {
     }
 
     //expression = term {(“+” | “-”) term}.
-    private Result expression(BasicBlock curBlock,Stack<BasicBlock>joinBlocks) throws IOException,Error{
-        Result x=term(curBlock,joinBlocks);
+    private Result expression(BasicBlock curBlock,Stack<BasicBlock>joinBlocks,FunctionDecl function) throws IOException,Error{
+        Result x=term(curBlock,joinBlocks,function);
         while(curToken==Token.PLUS||curToken==Token.MINUS){
             //we are not doing move,wo assign a expression
             x.isMove = false;
             Token operator=curToken;
             Next();
-            Result y=term(curBlock,joinBlocks);
+            Result y=term(curBlock,joinBlocks,function);
             x.instrRef=Instruction.getPc();
             //generate the instruction
             irCodeGenerator.generateArithmeticIC(curBlock,operator,x,y);
             ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
+
         }
         if(!x.isMove)
             x.type = Result.ResultType.instruction;
@@ -171,13 +192,13 @@ public class Parser {
     }
 
     //relation = expression relOp expression .
-    private Result relation(BasicBlock curBlock,Stack<BasicBlock>joinBlocks) throws IOException,Error{
+    private Result relation(BasicBlock curBlock,Stack<BasicBlock>joinBlocks,FunctionDecl function) throws IOException,Error{
         Result relation=null;
-        Result x=expression(curBlock,joinBlocks);
+        Result x=expression(curBlock,joinBlocks,function);
         if(curToken==Token.EQL||curToken==Token.NEQ||curToken==Token.LEQ||curToken==Token.LSS||curToken==Token.GEQ||curToken==Token.GRE){
             Token relOp=curToken;
             Next();
-            Result y=expression(curBlock,joinBlocks);
+            Result y=expression(curBlock,joinBlocks,function);
             irCodeGenerator.generateCMPIC(curBlock,x,y);
             relation=new Result();
             relation.relOp=relOp;
@@ -191,21 +212,27 @@ public class Parser {
     }
 
     //assignment = “let” designator “<-” expression.
-    private void assignment(BasicBlock curBlock,Stack<BasicBlock> joinBlocks) throws IOException,Error{
+    private void assignment(BasicBlock curBlock,Stack<BasicBlock> joinBlocks,FunctionDecl function) throws IOException,Error{
         if(curToken==Token.LET){
             Next();
-            Result variable=designator(curBlock,joinBlocks);
+            Result variable=designator(curBlock,joinBlocks,function);
             if(joinBlocks!=null&&joinBlocks.size()>0){
                 joinBlocks.peek().createPhiFunction(variable.varIdent);
             }
             if(curToken==Token.BECOMETO){
                 Next();
-                Result value=expression(curBlock,joinBlocks);
-                if(joinBlocks!=null){
-                    irCodeGenerator.assignmentIC(curBlock,joinBlocks.peek(),variable,value);
+                Result value=expression(curBlock,joinBlocks,function);
+                if(!variable.isArrayDesignator) {
+                    if (joinBlocks != null) {
+                        irCodeGenerator.assignmentIC(curBlock, joinBlocks.peek(), variable, value);
+                    } else {
+                        irCodeGenerator.assignmentIC(curBlock, null, variable, value);
+                    }
                 }
-                else{
-                    irCodeGenerator.assignmentIC(curBlock,null,variable,value);
+                else
+                {
+                    //generate SOTREADD
+                    curBlock.generateInstruction(InstructionType.STOREADD,value,this.ref);
                 }
             }
             else{
@@ -239,7 +266,7 @@ public class Parser {
                     Result y = new Result();
                     //find expression
                     if (isExpression(curToken)) {
-                        y = expression(curBlock, joinBlocks);
+                        y = expression(curBlock, joinBlocks,func);
 
                         //get the original definition of y
                         //don't need to do this for the definition of function
@@ -248,7 +275,7 @@ public class Parser {
 
                         while (curToken == Token.COMMA) {
                             Next();
-                            y = expression(curBlock, joinBlocks);
+                            y = expression(curBlock, joinBlocks,func);
                             if (x.varIdent >= 3)
                                 irCodeGenerator.generateASSIGNMENTIC(curBlock, y, func.getParameters().get(index++));
                         }
@@ -298,13 +325,13 @@ public class Parser {
     }
 
     //ifStatement = “if” relation “then” statSequence [ “else” statSequence ] “fi”.
-    private BasicBlock ifStatement(BasicBlock curBlock,Stack<BasicBlock> joinBlocks) throws IOException,Error{
+    private BasicBlock ifStatement(BasicBlock curBlock,Stack<BasicBlock> joinBlocks,FunctionDecl function) throws IOException,Error{
         HashMap<Integer,ArrayList<SSAValue>> ssaUseChain=VariableTable.cloneSSAUseChain();
         if(curToken==Token.IF){
             Next();
             Result follow=new Result();
             follow.fixuplocation=0;
-            Result relation=relation(curBlock,null);
+            Result relation=relation(curBlock,null,function);
             BasicBlock joinBlock=new BasicBlock(BlockType.IF_JOIN);
             curBlock.setJoinBlock(joinBlock);
             irCodeGenerator.condNegBraFwd(curBlock,relation);
@@ -341,8 +368,8 @@ public class Parser {
                     } else {
                         curBlock.setElseBlock(joinBlock);
                     }
-                    //updatePhiFuncsInJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
-                    //createPhiInIfJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
+                    updatePhiFuncsInJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
+                    createPhiInIfJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
                     VariableTable.setSSAUseChain(ssaUseChain);
                     updateReferenceForPhiVarInJoinBlock(joinBlock);
                     return joinBlock;
@@ -434,14 +461,14 @@ public class Parser {
     }
 
     //whileStatement = “while” relation “do” StatSequence “od”.
-    private BasicBlock whileStatement(BasicBlock curBlock, Stack<BasicBlock> joinBlocks) throws IOException,Error{
+    private BasicBlock whileStatement(BasicBlock curBlock, Stack<BasicBlock> joinBlocks,FunctionDecl function) throws IOException,Error{
         HashMap<Integer,ArrayList<SSAValue>> ssaUseChain=VariableTable.cloneSSAUseChain();
         if (curToken==Token.WHILE) {
             Next();
             BasicBlock joinBlock = new BasicBlock(BlockType.WHILE_JOIN);
             curBlock.setFollowBlock(joinBlock);
             curBlock = joinBlock;
-            Result relation = relation(curBlock, null);
+            Result relation = relation(curBlock, null,function);
             irCodeGenerator.condNegBraFwd(curBlock, relation);
             BasicBlock doEndBlock = null;
             if (curToken== Token.DO) {
@@ -500,13 +527,13 @@ public class Parser {
     }*/
 
     //returnStatement = “return” [ expression ] .
-    private Result returnStatement(BasicBlock curBlock,Stack<BasicBlock>joinBlocks) throws IOException{
+    private Result returnStatement(BasicBlock curBlock,Stack<BasicBlock>joinBlocks,FunctionDecl function) throws IOException{
         Result x = new Result();
         if(curToken == Token.RETURN)
         {
             Next();
             if(isExpression(curToken))
-                x = expression(curBlock,joinBlocks);
+                x = expression(curBlock,joinBlocks,function);
         }
         else
             Error("Expect RETURN in returnStatement!");
@@ -516,7 +543,7 @@ public class Parser {
     //statement = assignment | funcCall | ifStatement | whileStatement | returnStatement.
     private BasicBlock statement(BasicBlock curBlock,Stack<BasicBlock> joinBlocks,FunctionDecl function) throws IOException,Error{
         if(curToken==Token.LET){
-            assignment(curBlock,joinBlocks);
+            assignment(curBlock,joinBlocks,function);
             return curBlock;
         }
         else if(curToken == Token.CALL)
@@ -526,15 +553,15 @@ public class Parser {
         }
         else if(curToken == Token.IF)
         {
-            return ifStatement(curBlock,joinBlocks);
+            return ifStatement(curBlock,joinBlocks,function);
         }
         else if(curToken == Token.WHILE)
         {
-            return whileStatement(curBlock,joinBlocks);
+            return whileStatement(curBlock,joinBlocks,function);
         }
         else if(curToken == Token.RETURN)
         {
-            Result x = returnStatement(curBlock,joinBlocks);
+            Result x = returnStatement(curBlock,joinBlocks,function);
             irCodeGenerator.generateReturnIC(curBlock, x, function);
             return curBlock;
         }
@@ -585,7 +612,6 @@ public class Parser {
                 if(curToken == Token.CLOSE_BRACKET)
                 {
                     Next();
-                    return returnRes;
                 }
                 else
                     Error("Expect ] in ARRAY declaration!");
@@ -593,6 +619,8 @@ public class Parser {
 
             if(!hasDimension)
                 Error("Expect [] in ARRAY declaration!");
+            else
+                return returnRes;
         }
         else
         {
@@ -618,6 +646,13 @@ public class Parser {
             {
                 x.setArrayDimension(r);
                 x.isArray = true;
+                x.setArrayAddress(Result.arrayAddressCounter);
+
+                int length = 1;
+                //calculate the length of array
+                for(int i = r.size() -1  ; i >=0;i--)
+                    length = length  * r.get(i).value;
+                Result.updateArrayAddressCounter(length);
             }
 
             //declare the variable
@@ -658,7 +693,7 @@ public class Parser {
     {
         if(x.type != Result.ResultType.variable)
             this.Error("Variable declaration error! type should be variable! in " + scanner.getLineNumber());
-        else
+        else if(!x.isArray)
         {
             int varIdent = x.varIdent;
             x.setSSAVersion(Instruction.getPc());
@@ -676,6 +711,17 @@ public class Parser {
             //curBlock.generateInstruction(InstructionType.LOAD,x,null);
             //we add a move at the end of every variable declaration
             curBlock.generateInstruction(InstructionType.MOVE, Result.buildConstant(0), x);
+        }
+        else
+        {
+            int varIdent = x.varIdent;
+            x.setSSAVersion(Instruction.getPc());
+            VariableTable.addSSAUseChain(x.varIdent,x.ssaVersion);
+
+            if(function != null)
+                function.localArray.put(x.varIdent,x);
+            else
+                VariableTable.ArrayDefinition.put(x.varIdent,x);
         }
     }
 
@@ -849,26 +895,96 @@ public class Parser {
         return (token == Token.IDENTIFIER || token == Token.NUMBER || token == Token.OPEN_PARENTHESIS || token == Token.CALL);
     }
 
+    private Instruction calculateArray(BasicBlock curBlock,Result array,ArrayList<Result> dimension)
+    {
+        if(dimension.size() > 1) {
+            Instruction prev = null;
+            //generate instruction for the load of array
+            for (int i = 0; i < dimension.size() - 1; i++) {
+                Result d = dimension.get(i);
+                Instruction ins;
+                if (d.type == Result.ResultType.constant) {
+                    //generate MUL d.value array.dimension
+                    ins = curBlock.generateInstruction(InstructionType.MUL, Result.buildConstant(d.value), Result.buildConstant(array.arrayDimension.get(i).value));
+                } else {
+                    //generate MUL instruction.referenceID array.dimension
+                    Result ref = new Result();
+                    ref.buildResult(Result.ResultType.instruction, d.instrRef);
+                    ins = curBlock.generateInstruction(InstructionType.MUL, ref, Result.buildConstant(array.arrayDimension.get(i).value));
+                }
+
+                if (prev != null) {
+                    //generate ADD ins.reference prev.reference
+                    Result ref1 = new Result();
+                    ref1.buildResult(Result.ResultType.instruction, ins.getInstructionPC());
+                    Result ref2 = new Result();
+                    ref2.buildResult(Result.ResultType.instruction, prev.getInstructionPC());
+                    prev = curBlock.generateInstruction(InstructionType.ADD, ref1, ref2);
+                }
+                else
+                    prev = ins;
+            }
+
+            //for the last dimension, a little different
+            Result d = dimension.get(dimension.size()-1);
+
+            Result ref = new Result();
+            ref.buildResult(Result.ResultType.instruction, prev.getInstructionPC());
+
+            Instruction ins;
+            if (d.type == Result.ResultType.constant) {
+                //generate ADD prev.reference constant
+                ins = curBlock.generateInstruction(InstructionType.ADD, Result.buildConstant(d.value), ref);
+            } else {
+                //generate ADD instruction.referenceID array.dimension
+                Result ref1 = new Result();
+                ref1.buildResult(Result.ResultType.instruction, d.instrRef);
+                ins = curBlock.generateInstruction(InstructionType.ADD, ref1, ref);
+            }
+
+            ref.buildResult(Result.ResultType.instruction, ins.getInstructionPC());
+
+            //generate ADDA ins.reference array.address
+            return curBlock.generateInstruction(InstructionType.ADDA, ref, Result.buildConstant(array.arrayAddress));
+        }
+        else
+        {
+            Result d = dimension.get(0);
+
+            Instruction adda;
+            if (d.type == Result.ResultType.constant) {
+                //generate ADDA prev.reference constant
+                adda = curBlock.generateInstruction(InstructionType.ADDA, Result.buildConstant(d.value), Result.buildConstant(array.arrayAddress));
+            } else {
+                //generate ADDA instruction.referenceID array.dimension
+                Result ref = new Result();
+                ref.buildResult(Result.ResultType.instruction, d.instrRef);
+                adda = curBlock.generateInstruction(InstructionType.ADDA, ref, Result.buildConstant(array.arrayAddress));
+            }
+            return adda;
+        }
+    }
+
     public static void main(String []args) throws Throwable{
-        String testname = "test025";
+        String testname = "test020";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
 
-        System.out.println(ControlFlowGraph.delUseChain.xDefUseChains);
-        System.out.println(ControlFlowGraph.delUseChain.yDefUseChains);
+//        System.out.println(ControlFlowGraph.delUseChain.xDefUseChains);
+//        System.out.println(ControlFlowGraph.delUseChain.yDefUseChains);
 
         VCGGraphGenerator vcg = new VCGGraphGenerator(testname);
-        //vcg.printCFG();
+        vcg.printCFG();
 
-        DominatorTreeGenerator dt = new DominatorTreeGenerator();
-        dt.buildDominatorTree(DominatorTreeGenerator.root);
+//        DominatorTreeGenerator dt = new DominatorTreeGenerator();
+//        dt.buildDominatorTree(DominatorTreeGenerator.root);
 
         //vcg.printDominantTree();
 
-        CP cp = new CP();
-        cp.CPoptimize(DominatorTreeGenerator.root);
-        vcg.printDominantTree();
+//        CP cp = new CP();
+//        cp.CPoptimize(DominatorTreeGenerator.root);
+//        vcg.printDominantTree();
 
         CSE cse = new CSE();
         cse.CSEoptimize(DominatorTreeGenerator.root);

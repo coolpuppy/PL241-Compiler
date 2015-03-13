@@ -90,10 +90,10 @@ public class IRCodeGenerator {
 
     public void assignmentIC(BasicBlock curBlock,BasicBlock joinBlock,Result variable,Result value){
         variable.setSSAVersion(Instruction.getPc());
-        VariableTable.addSSAUseChain(variable.varIdent,variable.ssaVersion);
-        curBlock.generateInstruction(InstructionType.MOVE,value,variable);
-        if(joinBlock!=null){
-            joinBlock.updatePhiFunction(variable.varIdent,variable.ssaVersion,curBlock.getType());
+        VariableTable.addSSAUseChain(variable.varIdent, variable.ssaVersion);
+        curBlock.generateInstruction(InstructionType.MOVE, value, variable);
+        if (joinBlock != null) {
+            joinBlock.updatePhiFunction(variable.varIdent, variable.ssaVersion, curBlock.getType());
         }
     }
 
