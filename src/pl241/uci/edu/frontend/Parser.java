@@ -130,7 +130,14 @@ public class Parser {
         Result factor=new Result();
         if(curToken==Token.IDENTIFIER){
             factor=designator(curBlock,joinBlocks,function);
-            factor.ssaVersion= VariableTable.getLatestVersion(factor.varIdent);
+            if(!factor.isArrayDesignator)
+                factor.ssaVersion= VariableTable.getLatestVersion(factor.varIdent);
+            else
+            {
+                Result ref1 = new Result();
+                ref1.buildResult(Result.ResultType.instruction,this.ref.instrRef);
+                return ref1;
+            }
         }
         else if(curToken==Token.NUMBER){
             factor.buildResult(Result.ResultType.constant,scanner.getVal());
@@ -217,7 +224,8 @@ public class Parser {
             Next();
             Result variable=designator(curBlock,joinBlocks,function);
             if(joinBlocks!=null&&joinBlocks.size()>0){
-                joinBlocks.peek().createPhiFunction(variable.varIdent);
+                if(!variable.isArrayDesignator)
+                    joinBlocks.peek().createPhiFunction(variable.varIdent);
             }
             if(curToken==Token.BECOMETO){
                 Next();
@@ -966,7 +974,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test025";
+        String testname = "test020";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
@@ -975,16 +983,16 @@ public class Parser {
 //        System.out.println(ControlFlowGraph.delUseChain.yDefUseChains);
 
         VCGGraphGenerator vcg = new VCGGraphGenerator(testname);
-        //vcg.printCFG();
+        vcg.printCFG();
 
-        DominatorTreeGenerator dt = new DominatorTreeGenerator();
-        dt.buildDominatorTree(DominatorTreeGenerator.root);
+//        DominatorTreeGenerator dt = new DominatorTreeGenerator();
+//        dt.buildDominatorTree(DominatorTreeGenerator.root);
 
         //vcg.printDominantTree();
 
-        CP cp = new CP();
-        cp.CPoptimize(DominatorTreeGenerator.root);
-        //vcg.printDominantTree();
+//        CP cp = new CP();
+//        cp.CPoptimize(DominatorTreeGenerator.root);
+//        vcg.printDominantTree();
 
         CSE cse = new CSE();
         cse.CSEoptimize(DominatorTreeGenerator.root);
