@@ -30,6 +30,7 @@ public class Result implements Comparable<Result>{
     public static int arrayAddressCounter = 0;
     public int arrayAddress;
 
+
     //for the define of a array
     public ArrayList<Result> arrayDimension = new ArrayList<Result>();
 
@@ -177,13 +178,13 @@ public class Result implements Comparable<Result>{
         this.arrayDimension = r;
     }
 
-    public void updateArrayAddress(int length)
+    public static void updateArrayAddressCounter(int length)
     {
-        arrayAddress  = arrayAddress + length;
+        arrayAddressCounter  = arrayAddressCounter + length;
     }
 
-    public void setArrayAddress()
+    public void setArrayAddress(int address)
     {
-        this.arrayAddress = arrayAddressCounter;
+        this.arrayAddress = address;
     }
 }
