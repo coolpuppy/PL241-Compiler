@@ -35,6 +35,11 @@ public class ControlFlowGraph {
         allFunctions = new HashMap<Integer,FunctionDecl>();
         allInstructions = new ArrayList<Instruction>();
         delUseChain = new DelUseChain();
+
+        //add pre defined function
+        allFunctions.put(0,new FunctionDecl(0));
+        allFunctions.put(1,new FunctionDecl(1));
+        allFunctions.put(2,new FunctionDecl(2));
     }
 
     public static BasicBlock getFirstBlock()

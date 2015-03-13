@@ -86,6 +86,7 @@ public class Parser {
         ArrayList<Result> dimensions=new ArrayList<Result>();
         if(curToken==Token.IDENTIFIER){
             designator.buildResult(Result.ResultType.variable,scanner.getVarIdent());
+
             Next();
             while(curToken==Token.OPEN_BRACKET){
                 Next();
@@ -187,10 +188,13 @@ public class Parser {
             Token operator=curToken;
             Next();
             Result y=term(curBlock,joinBlocks,function);
-            x.instrRef=Instruction.getPc();
+            x.type = Result.ResultType.instruction;
             //generate the instruction
-            irCodeGenerator.generateArithmeticIC(curBlock,operator,x,y);
+            if(!y.isMove)
+                y.type = Result.ResultType.instruction;
+            irCodeGenerator.generateArithmeticIC(curBlock, operator, x, y);
             ControlFlowGraph.delUseChain.updateDefUseChain(x,y);
+            x.instrRef = Instruction.getPc()-1;
 
         }
         if(!x.isMove)
@@ -1026,11 +1030,11 @@ public class Parser {
 
         CP cp = new CP();
         cp.CPoptimize(DominatorTreeGenerator.root);
-        //vcg.printDominantTree();
+//        vcg.printDominantTree();
 
         CSE cse = new CSE();
         cse.CSEoptimize(DominatorTreeGenerator.root);
-        vcg.printDominantTree();
+        //vcg.printDominantTree();
 
         RegisterAllocation ra = new RegisterAllocation();
         //ra.allocate(DominatorTreeGenerator.root);
