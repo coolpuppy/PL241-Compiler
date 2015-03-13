@@ -673,6 +673,20 @@ public class Parser {
                     x = new Result();
                     x.buildResult(Result.ResultType.variable, scanner.getID());
 
+                    //if x is a array, set the dimension
+                    if(r != null)
+                    {
+                        x.setArrayDimension(r);
+                        x.isArray = true;
+                        x.setArrayAddress(Result.arrayAddressCounter);
+
+                        int length = 1;
+                        //calculate the length of array
+                        for(int i = r.size() -1  ; i >=0;i--)
+                            length = length  * r.get(i).value;
+                        Result.updateArrayAddressCounter(length);
+                    }
+
                     //declare the variable
                     declareVariable(curBlock, x, function);
                     Next();
@@ -974,7 +988,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test032";
+        String testname = "test020";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
@@ -983,16 +997,16 @@ public class Parser {
 //        System.out.println(ControlFlowGraph.delUseChain.yDefUseChains);
 
         VCGGraphGenerator vcg = new VCGGraphGenerator(testname);
-        //vcg.printCFG();
+        vcg.printCFG();
 
-        DominatorTreeGenerator dt = new DominatorTreeGenerator();
-        dt.buildDominatorTree(DominatorTreeGenerator.root);
+//        DominatorTreeGenerator dt = new DominatorTreeGenerator();
+//        dt.buildDominatorTree(DominatorTreeGenerator.root);
 
         //vcg.printDominantTree();
 
-        CP cp = new CP();
-        cp.CPoptimize(DominatorTreeGenerator.root);
-        //vcg.printDominantTree();
+//        CP cp = new CP();
+//        cp.CPoptimize(DominatorTreeGenerator.root);
+//        vcg.printDominantTree();
 
         CSE cse = new CSE();
         cse.CSEoptimize(DominatorTreeGenerator.root);
