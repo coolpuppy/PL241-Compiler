@@ -167,7 +167,7 @@ public class CP {
                     // change result type to instr and assign instr#
                     right.type = Result.ResultType.instruction;
                     right.instrRef = instrId;
-                    oldIns.leftRepresentedByInstrId = true;
+                    oldIns.rightRepresentedByInstrId = true;
                     oldIns.setRightResult(right);
                 }
             }
@@ -193,46 +193,6 @@ public class CP {
                     oldIns.leftRepresentedByInstrId = true;
                     oldIns.setLeftResult(left);
                 }
-            }
-        }
-
-
-
-
-        //TODO:update the result in phi function
-        for(Map.Entry<Integer, Instruction> entry : root.block.getPhiFunctionGenerator().getPhiInstructionMap().entrySet()){
-            Instruction oldIns = entry.getValue();
-            Result left = new Result(entry.getKey(),oldIns,true);
-            Result right = new Result(entry.getKey(),oldIns,false);
-
-            int instrId;
-            if(ResultTOConstant.containsKey(left)){
-                int constant = ResultTOConstant.get(left);
-                // put constant in result
-                left.type = Result.ResultType.constant;
-                left.value = constant;
-                oldIns.setLeftResult(left);
-            }else if(ResultTOInstruction.containsKey(left)){
-                instrId = ResultTOInstruction.get(left);
-                // change result type to instr and assign instr#
-                left.type = Result.ResultType.instruction;
-                left.instrRef = instrId;
-                oldIns.leftRepresentedByInstrId = true;
-                oldIns.setLeftResult(left);
-            }
-            if(ResultTOConstant.containsKey(right)){
-                int constant = ResultTOConstant.get(right);
-                // put constant in result
-                right.type = Result.ResultType.constant;
-                right.value = constant;
-                oldIns.setLeftResult(right);
-            }else if(ResultTOInstruction.containsKey(right)){
-                instrId = ResultTOInstruction.get(right);
-                // change result type to instr and assign instr#
-                right.type = Result.ResultType.instruction;
-                right.instrRef = instrId;
-                oldIns.leftRepresentedByInstrId = true;
-                oldIns.setLeftResult(right);
             }
         }
 

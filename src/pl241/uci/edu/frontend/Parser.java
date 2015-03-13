@@ -851,7 +851,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test010";
+        String testname = "test008";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
@@ -865,11 +865,11 @@ public class Parser {
         DominatorTreeGenerator dt = new DominatorTreeGenerator();
         dt.buildDominatorTree(DominatorTreeGenerator.root);
 
-        vcg.printDominantTree();
-//
-//        CP cp = new CP();
-//        cp.CPoptimize(DominatorTreeGenerator.root);
         //vcg.printDominantTree();
+
+        CP cp = new CP();
+        cp.CPoptimize(DominatorTreeGenerator.root);
+        vcg.printDominantTree();
 
         CSE cse = new CSE();
         //cse.CSEoptimize(DominatorTreeGenerator.root);

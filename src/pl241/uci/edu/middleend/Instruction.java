@@ -270,18 +270,27 @@ public class Instruction {
                 sb.append(result2 != null ? result2.toString() : "");
             }
         } else {
-            String var1;
-            String var2;
+            String var1="";
+            String var2="";
             if (leftRepresentedByInstrId) {
                 var1 = "(" + this.getLeftResult().instrRef + ")";
+            } else if(result1!=null&&result1.type==Result.ResultType.constant){
+                var1 = Integer.toString(result1.value);
+            } else if(result1!=null&&result1.type==Result.ResultType.instruction){
+                var1 = "(" + result1.instrRef + ")";
             } else{
                 var1 = this.variableName + "_" + s1.toString();
             }
             if(rightRepresentedByInstrId){
                 var2 = "(" + this.getRightResult().instrRef + ")";
+            } else if(result2!=null&&result2.type==Result.ResultType.constant){
+                var2 = Integer.toString(result2.value);
+            } else if(result2!=null&&result2.type==Result.ResultType.instruction){
+                var2 = "(" + result2.instrRef + ")";
             } else{
                 var2 = this.variableName + "_" + s2.toString();
             }
+
             sb.append(variableName + "_" + instructionPC + " " + var1 + " " + var2);
         }
         if (deleted) {
