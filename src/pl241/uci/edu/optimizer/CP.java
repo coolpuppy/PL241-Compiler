@@ -123,6 +123,15 @@ public class CP {
                             }
                         }
                     }
+                }else if(left != null && left.type == Result.ResultType.instruction) {
+                        for(Map.Entry<Result, Integer> entry : ResultTOInstruction.entrySet())
+                        {
+                            if(entry.getKey().ssaVersion.getVersion()==left.instrRef) {
+                                int pc = entry.getValue();
+                                left.type = Result.ResultType.instruction;
+                                left.instrRef = pc;
+                            }
+                        }
                 }
 
                 if(right != null && right.type == Result.ResultType.variable)
@@ -139,6 +148,15 @@ public class CP {
                         right.type = Result.ResultType.instruction;
                         right.instrRef = pc;
                     }
+                }else if(right != null && right.type == Result.ResultType.instruction) {
+                        for(Map.Entry<Result, Integer> entry : ResultTOInstruction.entrySet())
+                        {
+                            if(entry.getKey().ssaVersion.getVersion()==right.instrRef) {
+                                int pc = entry.getValue();
+                                right.type = Result.ResultType.instruction;
+                                right.instrRef = pc;
+                            }
+                        }
                 }
             }
         }

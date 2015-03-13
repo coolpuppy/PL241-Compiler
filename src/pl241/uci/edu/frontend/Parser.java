@@ -189,7 +189,7 @@ public class Parser {
             Result y=term(curBlock,joinBlocks,function);
             x.instrRef=Instruction.getPc();
             //generate the instruction
-            irCodeGenerator.generateArithmeticIC(curBlock,operator,x,y);
+            //irCodeGenerator.generateArithmeticIC(curBlock,operator,x,y);
             if(!y.isMove)
                 y.type = Result.ResultType.instruction;
             irCodeGenerator.generateArithmeticIC(curBlock, operator, x, y);
@@ -1010,7 +1010,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test031";
+        String testname = "test033";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
@@ -1028,13 +1028,14 @@ public class Parser {
 
         CP cp = new CP();
         cp.CPoptimize(DominatorTreeGenerator.root);
-//        vcg.printDominantTree();
+        //vcg.printDominantTree();
 
         CSE cse = new CSE();
         cse.CSEoptimize(DominatorTreeGenerator.root);
         vcg.printDominantTree();
 
         RegisterAllocation ra = new RegisterAllocation();
-        //ra.allocate(DominatorTreeGenerator.root);
+        ra.allocate(DominatorTreeGenerator.root);
+        //ra.printVCG(testname);
     }
 }
