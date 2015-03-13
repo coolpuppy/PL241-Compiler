@@ -247,6 +247,11 @@ public class Instruction {
         return (!(result1 == null || result2 == null)) && ArithOp.contains(op) || BranchOp.contains(op) && result1.type == Result.ResultType.variable && result2.type == Result.ResultType.variable;
     }
 
+    public boolean isLoadInstruction()
+    {
+        return this.op == InstructionType.LOAD;
+    }
+
     public String toString() {
         StringBuilder sb = new StringBuilder("");
         sb.append(instructionPC + ": ");

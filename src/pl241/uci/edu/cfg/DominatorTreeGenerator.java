@@ -23,28 +23,31 @@ public class DominatorTreeGenerator {
     /**
      *  This is used to generate the dominator tree successor block of root.
      */
-    public void buildDominatorTree()
+    public void buildDominatorTree(DominatorTreeNode start)
     {
-        if(root != null)
+        if(start != null)
         {
-            if(root.getBasicBlock().getFollowBlock() != null && !(visited.contains(root.getBasicBlock().getFollowBlock())))
+            if(start.getBasicBlock().getFollowBlock() != null && !(visited.contains(start.getBasicBlock().getFollowBlock())))
             {
-                DominatorTreeNode child = new DominatorTreeNode(root.getBasicBlock().getFollowBlock());
-                root.getChildren().add(child);
-                visited.add(root.getBasicBlock().getFollowBlock());
+                DominatorTreeNode child = new DominatorTreeNode(start.getBasicBlock().getFollowBlock());
+                start.getChildren().add(child);
+                visited.add(start.getBasicBlock().getFollowBlock());
             }
-            else if(root.getBasicBlock().getJoinBlock() != null && !(visited.contains(root.getBasicBlock().getJoinBlock())))
+            if(start.getBasicBlock().getJoinBlock() != null && !(visited.contains(start.getBasicBlock().getJoinBlock())))
             {
-                DominatorTreeNode child = new DominatorTreeNode(root.getBasicBlock().getJoinBlock());
-                root.getChildren().add(child);
-                visited.add(root.getBasicBlock().getJoinBlock());
+                DominatorTreeNode child = new DominatorTreeNode(start.getBasicBlock().getJoinBlock());
+                start.getChildren().add(child);
+                visited.add(start.getBasicBlock().getJoinBlock());
             }
-            else if(root.getBasicBlock().getElseBlock() != null && !(visited.contains(root.getBasicBlock().getElseBlock())))
+            if(start.getBasicBlock().getElseBlock() != null && !(visited.contains(start.getBasicBlock().getElseBlock())))
             {
-                DominatorTreeNode child = new DominatorTreeNode(root.getBasicBlock().getElseBlock());
-                root.getChildren().add(child);
-                visited.add(root.getBasicBlock().getElseBlock());
+                DominatorTreeNode child = new DominatorTreeNode(start.getBasicBlock().getElseBlock());
+                start.getChildren().add(child);
+                visited.add(start.getBasicBlock().getElseBlock());
             }
+
+            for(int i = 0;i < start.getChildren().size();i++)
+                buildDominatorTree(start.getChildren().get(i));
         }
         else
             Error("Root node is null!");

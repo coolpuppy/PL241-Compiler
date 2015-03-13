@@ -341,7 +341,7 @@ public class Parser {
                     } else {
                         curBlock.setElseBlock(joinBlock);
                     }
-                    updatePhiFuncsInJoinBlocks(curBlock,thenEndBlock,elseEndBlock,joinBlock,ssaUseChain);
+                    updatePhiFuncsInJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
                     createPhiInIfJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
                     VariableTable.setSSAUseChain(ssaUseChain);
                     updateReferenceForPhiVarInJoinBlock(joinBlock);
@@ -851,7 +851,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test011";
+        String testname = "test010";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
@@ -860,15 +860,15 @@ public class Parser {
         System.out.println(ControlFlowGraph.delUseChain.yDefUseChains);
 
         VCGGraphGenerator vcg = new VCGGraphGenerator(testname);
-        vcg.printCFG();
+        //vcg.printCFG();
 
         DominatorTreeGenerator dt = new DominatorTreeGenerator();
-        dt.buildDominatorTree();
+        dt.buildDominatorTree(DominatorTreeGenerator.root);
 
-        //vcg.printDominantTree();
-
-        CP cp = new CP();
-        cp.CPoptimize(DominatorTreeGenerator.root);
+        vcg.printDominantTree();
+//
+//        CP cp = new CP();
+//        cp.CPoptimize(DominatorTreeGenerator.root);
         //vcg.printDominantTree();
 
         CSE cse = new CSE();

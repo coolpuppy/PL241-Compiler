@@ -49,7 +49,7 @@ public class CP {
                 ResultTOInstruction.put(y, pc);
 
                 // mark next instr as deleted
-                //next.deleted = true;
+                next.deleted = true;
             }
             else if(ins.isMoveConstant())
             {
@@ -70,12 +70,12 @@ public class CP {
                     int constant = ResultTOConstant.get(left);
                     ResultTOConstant.put(right, constant);
                     //mark instr as deleted
-                    //ins.deleted = true;
+                    ins.deleted = true;
                 }else{
                     int pc = ResultTOInstruction.get(left);
                     ResultTOInstruction.put(right, pc);
                     // mark instr as deleted
-                    //ins.deleted = true;
+                    ins.deleted = true;
                     ins.referenceInstrId = pc;
                 }
             }
