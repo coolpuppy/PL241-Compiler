@@ -187,4 +187,8 @@ public class Result implements Comparable<Result>{
     {
         this.arrayAddress = address;
     }
+
+    public boolean isIdent(int ident, int oldSSA){
+        return this.type == ResultType.variable && this.varIdent == ident && this.ssaVersion.getVersion() == oldSSA;
+    }
 }

@@ -374,10 +374,10 @@ public class Parser {
                     if (elseEndBlock != null) {
                         elseEndBlock.setJoinBlock(joinBlock);
                     } else {
-                        //curBlock.setElseBlock(joinBlock);
+                        curBlock.setElseBlock(joinBlock);
                     }
                     //updatePhiFuncsInJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
-                    //createPhiInIfJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
+                    createPhiInIfJoinBlocks(curBlock, thenEndBlock, elseEndBlock, joinBlock, ssaUseChain);
                     VariableTable.setSSAUseChain(ssaUseChain);
                     updateReferenceForPhiVarInJoinBlock(joinBlock);
                     return joinBlock;
@@ -396,7 +396,7 @@ public class Parser {
         return null;
     }
 
-    /*private void createPhiInIfJoinBlocks(BasicBlock curBlock, BasicBlock ifEndBlock, BasicBlock elseEndBlock, BasicBlock joinBlock, HashMap<Integer, ArrayList<SSAValue>> ssaUseChain)  throws Error {
+    private void createPhiInIfJoinBlocks(BasicBlock curBlock, BasicBlock ifEndBlock, BasicBlock elseEndBlock, BasicBlock joinBlock, HashMap<Integer, ArrayList<SSAValue>> ssaUseChain)  throws Error {
         HashSet<Integer> phiVars = new HashSet<Integer>();
         HashSet<Integer> ifPhiVars = ifEndBlock.getPhiVars(curBlock);
         phiVars.addAll(ifPhiVars);
@@ -431,7 +431,7 @@ public class Parser {
                 joinBlock.updatePhiFunction(phiVar, ssaMap.get(phiVar).get(ssaMap.get(phiVar).size() - 1), elseLastBlock.getType());
             }
         }
-    }*/
+    }
 
     private void updateReferenceForPhiVarInJoinBlock(BasicBlock joinBlock) {
         for (Map.Entry<Integer, Instruction> entry : joinBlock.getPhiFuncs().entrySet()) {
@@ -488,7 +488,7 @@ public class Parser {
                 joinBlocks.push(joinBlock);
                 doEndBlock = stateSequence(startBlock, joinBlocks, null);
                 doEndBlock.generateInstruction(InstructionType.BRA, null, Result.buildBranch(curBlock));
-                //updateReferenceForPhiVarInLoopBody(joinBlock, startBlock, doEndBlock);
+                updateReferenceForPhiVarInLoopBody(joinBlock, startBlock, doEndBlock);
                 BasicBlock followBlock = curBlock.createElseBlock();
                 irCodeGenerator.fix(relation.fixuplocation, followBlock);
                 doEndBlock.setBackBlock(curBlock);
@@ -496,7 +496,7 @@ public class Parser {
                 for (BasicBlock jB : joinBlocks) {
                     updateValuesInOuterPhiFunc(joinBlock.getPhiFuncs(), jB, false);
                 }
-                //createPhiInWhileJoinBlocks(curBlock, doEndBlock, joinBlock, ssaUseChain);
+                createPhiInWhileJoinBlocks(curBlock, doEndBlock, joinBlock, ssaUseChain);
                 VariableTable.setSSAUseChain(ssaUseChain);
                 updateReferenceForPhiVarInJoinBlock(joinBlock);
                 if (curToken == Token.OD) {
@@ -512,7 +512,7 @@ public class Parser {
         return null;
     }
 
-    /*private void createPhiInWhileJoinBlocks(BasicBlock curBlock,BasicBlock doEndBlock, BasicBlock joinBlock,HashMap<Integer,ArrayList<SSAValue>> ssaUseChain){
+    private void createPhiInWhileJoinBlocks(BasicBlock curBlock,BasicBlock doEndBlock, BasicBlock joinBlock,HashMap<Integer,ArrayList<SSAValue>> ssaUseChain){
         HashSet<Integer> phiVars = new HashSet<Integer>();
         phiVars.addAll(doEndBlock.getPhiVars(curBlock));
         HashSet<Integer> curPhiVars = joinBlock.getPhiVars();
@@ -520,19 +520,19 @@ public class Parser {
             if (!curPhiVars.contains(phiVar)) {
                 Instruction curInstr = joinBlock.createPhiFunction(phiVar);
                 joinBlock.updatePhiFunction(phiVar, doEndBlock.findLastSSA(phiVar, curBlock), doEndBlock.getType());
-                joinBlock.updatePhiFunction(phiVar, ssaUseChain.get(phiVar).get(ssaUseChain.get(phiVar).size() - 1), );
+                joinBlock.updatePhiFunction(phiVar, ssaUseChain.get(phiVar).get(ssaUseChain.get(phiVar).size() - 1), BlockType.IF);
                 if (joinBlock.getType() == BlockType.WHILE_JOIN) {
                     doEndBlock.assignNewSSA(phiVar, ssaUseChain.get(phiVar).get(ssaUseChain.get(phiVar).size() - 1), new SSAValue(curInstr.getInstructionPC()), curBlock);
                 }
             }
         }
-    }*/
+    }
 
-    /*public void updateReferenceForPhiVarInLoopBody(BasicBlock innerJoinBlock, BasicBlock startBlock,
-                                                   BasicBlock doLastBlock) throws Throwable {
-        for (Map.Entry<Integer, Instruction> entry : innerJoinBlock.getPhiFuncs().entrySet())
-            innerJoinBlock.updateValueReference(entry.getKey(), entry.getValue().getLeftSSA().getVersion(), entry.getValue().getInstructionPC(), startBlock, doLastBlock);
-    }*/
+    public void updateReferenceForPhiVarInLoopBody(BasicBlock innerJoinBlock, BasicBlock startBlock, BasicBlock doLastBlock) {
+        for (Map.Entry<Integer, Instruction> entry : innerJoinBlock.getPhiFuncs().entrySet()) {
+            innerJoinBlock.updateVarReferenceToPhi(entry.getKey(), entry.getValue().getLeftSSA().getVersion(), entry.getValue().getInstructionPC(), startBlock, doLastBlock);
+        }
+    }
 
     //returnStatement = “return” [ expression ] .
     private Result returnStatement(BasicBlock curBlock,Stack<BasicBlock>joinBlocks,FunctionDecl function) throws IOException{
@@ -1008,7 +1008,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test008";
+        String testname = "test033";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
@@ -1026,13 +1026,13 @@ public class Parser {
 
         CP cp = new CP();
         cp.CPoptimize(DominatorTreeGenerator.root);
-//        vcg.printDominantTree();
+        //vcg.printDominantTree();
 
         CSE cse = new CSE();
         cse.CSEoptimize(DominatorTreeGenerator.root);
-        //vcg.printDominantTree();
+        vcg.printDominantTree();
 
         RegisterAllocation ra = new RegisterAllocation();
-        ra.allocate(DominatorTreeGenerator.root);
+        //ra.allocate(DominatorTreeGenerator.root);
     }
 }

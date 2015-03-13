@@ -188,8 +188,6 @@ public class RegisterAllocation {
                     if (b.block.getType() == BlockType.WHILE_JOIN && index == 0)
                         loopHeaders.remove(b);
                 }
-
-                // Handle non PHI instructions
                 List<Instruction> reverse = new ArrayList<Instruction>();
                 reverse.addAll(b.block.getInstructions());
                 Collections.reverse(reverse);
@@ -207,8 +205,6 @@ public class RegisterAllocation {
                 bbInfo.get(b).live = new HashSet<Instruction>();
                 bbInfo.get(b).live.addAll(live);
             }
-
-            // Handle PHI instructions
             List<Instruction> reverse = new ArrayList<Instruction>();
             reverse.addAll(b.block.getInstructions());
             Collections.reverse(reverse);
@@ -222,7 +218,6 @@ public class RegisterAllocation {
                 }
             }
         }
-
         return live;
     }
 }

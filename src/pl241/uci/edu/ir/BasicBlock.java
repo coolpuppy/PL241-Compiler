@@ -199,9 +199,59 @@ public class BasicBlock {
         }
     }
 
-    public void updateValueReferenceInLoopBody()
-    {
+    public void updateVarReferenceToPhi(int ident, int oldSSA, int newSSA, BasicBlock startBlock, BasicBlock endBlock) {
+        //updateVarReferenceInJoinBlock(ident, oldSSA, newSSA);
+        updateVarReferenceInLoopBody(startBlock, endBlock, ident, oldSSA, newSSA);
+    }
 
+    public void updateVarReferenceInLoopBody(BasicBlock startBlock, BasicBlock endBlock, int ident, int oldSSA, int newSSA) {
+        HashSet<BasicBlock> visited = new HashSet<BasicBlock>();
+        Queue<BasicBlock> q = new LinkedList<BasicBlock>();
+        q.add(startBlock);
+        while (!q.isEmpty()) {
+            BasicBlock curBlock = q.poll();
+            visited.add(curBlock);
+            updateVarReferenceInBasicBlock(curBlock, ident, oldSSA, newSSA);
+
+            if (curBlock == endBlock)
+                continue;
+            Queue<BasicBlock> newSuccessors = curBlock.getSuccessors();
+            for (BasicBlock successor : newSuccessors) {
+                if (!visited.contains(successor))
+                    q.add(successor);
+            }
+        }
+    }
+
+    public void updateVarReferenceInBasicBlock(BasicBlock block, int ident, int oldSSA, int newSSA) {
+        for (Instruction i : block.getInstructions()) {
+            if (i.getLeftResult() != null && i.getLeftResult().isIdent(ident,oldSSA))
+                i.getLeftResult().setSSAVersion(newSSA);
+            if (i.getRightResult() != null && i.getRightResult().isIdent(ident,oldSSA))
+                i.getRightResult().setSSAVersion(newSSA);
+        }
+    }
+
+    public Queue<BasicBlock> getSuccessors() {
+        Queue<BasicBlock> successors = new LinkedList<BasicBlock>();
+        if (followBlock != null)
+            successors.add(followBlock);
+        if (elseBlock != null && !successors.contains(elseBlock))
+            successors.add(elseBlock);
+        if (joinBlock != null && !successors.contains(joinBlock))
+            successors.add(joinBlock);
+        return successors;
+    }
+
+    public void updateVarReferenceInJoinBlock(int ident, int oldSSA, int newSSA) {
+        // update cond statement
+        Instruction cond = findConditionInstruction(ident);
+        if (cond != null) {
+            if (cond.getLeftResult().varIdent == ident)
+                cond.getLeftResult().setSSAVersion(newSSA);
+            else
+                cond.getRightResult().setSSAVersion(newSSA);
+        }
     }
 
     public BasicBlock createIfBlock(){
@@ -273,7 +323,7 @@ public class BasicBlock {
         return null;
     }
 
-    /*public SSAValue findLastSSA(int ident, BasicBlock startBlock){
+    public SSAValue findLastSSA(int ident, BasicBlock startBlock){
         BasicBlock cur = this;
         while (cur != null && cur != startBlock) {
             for(Map.Entry<Integer, Instruction> entry : cur.getPhiFuncs().entrySet()){
@@ -284,7 +334,51 @@ public class BasicBlock {
             cur = cur.getPreBlock();
         }
         return null;
-    }*/
+    }
+
+    public void assignNewSSA(int ident, SSAValue ssa, SSAValue newSSA, BasicBlock startBlock){
+        BasicBlock cur = this;
+        while (cur != null) {
+            for(Map.Entry<Integer, Instruction> entry : cur.getPhiFuncs().entrySet()){
+                if(entry.getKey() == ident && entry.getValue().getLeftSSA() == ssa){
+                    entry.getValue().setLeftSSA(newSSA);
+                }
+            }
+            HashSet<Instruction> instrs = startBlock.getAllDoInstructions();
+            for(Instruction instr : instrs){
+                if(instr.getLeftResult() != null && instr.getLeftResult().varIdent == ident && instr.getLeftResult().ssaVersion == ssa){
+                    instr.getLeftResult().ssaVersion = newSSA;
+                }
+                if(instr.getRightResult() != null && instr.getRightResult().varIdent == ident && instr.getRightResult().ssaVersion == ssa){
+                    instr.getRightResult().ssaVersion = newSSA;
+                }
+            }
+            if(cur == startBlock)
+                break;
+            cur = cur.getPreBlock();
+        }
+        return;
+    }
+
+    public HashSet<Instruction> getAllDoInstructionsUtil(BasicBlock block){
+        HashSet<Instruction> instrs = new HashSet<Instruction>();
+        if(block == null)
+            return instrs;
+        instrs.addAll(block.getInstructions());
+        if(block.followBlock != null)
+            instrs.addAll(getAllDoInstructionsUtil(block.followBlock));
+        if(block.elseBlock != null)
+            instrs.addAll(getAllDoInstructionsUtil(block.elseBlock));
+        if(block.joinBlock != null)
+            instrs.addAll(getAllDoInstructionsUtil(block.joinBlock));
+        return instrs;
+    }
+
+    public HashSet<Instruction> getAllDoInstructions(){
+        if(this.type != BlockType.WHILE_JOIN)
+            return null;
+        return getAllDoInstructionsUtil(this);
+    }
 
     public Instruction generateInstruction(InstructionType type,Result r1,Result r2) {
         Instruction newIns = new Instruction(type, r1 == null ? null : r1.deepClone(r1), r2 == null ? null : r2.deepClone(r2));
@@ -306,4 +400,5 @@ public class BasicBlock {
         }
         return null;
     }
+
 }
