@@ -103,7 +103,7 @@ public class CSE {
                 right.instrRef = replaceInstruction.get(right.instrRef);
             }
         }
-        if(root.block.getType()== BlockType.DO){
+        if(root.block.getBackBlock()!=null){
             for(Map.Entry<Integer, Instruction> entry : root.block.getBackBlock().getPhiFunctionGenerator().getPhiInstructionMap().entrySet()){
                 Instruction instr = entry.getValue();
                 Result left = instr.getLeftResult();
