@@ -1008,7 +1008,7 @@ public class Parser {
     }
 
     public static void main(String []args) throws Throwable{
-        String testname = "test032";
+        String testname = "test008";
         Parser p = new Parser("src/test/"+testname +".txt");
         p.parser();
         ControlFlowGraph.printInstruction();
@@ -1030,10 +1030,9 @@ public class Parser {
 
         CSE cse = new CSE();
         cse.CSEoptimize(DominatorTreeGenerator.root);
-        vcg.printDominantTree();
+        //vcg.printDominantTree();
 
-//        RegisterAllocation ra = new RegisterAllocation();
-//        ra.optimize(ControlFlowGraph.getFirstBlock());
-//        vcg.printCFG();
+        RegisterAllocation ra = new RegisterAllocation();
+        ra.allocate(DominatorTreeGenerator.root);
     }
 }
