@@ -47,6 +47,11 @@ public class RegisterAllocation {
                 {
                     mapInstructiontoConstantorRegno(ins.getLeftResult());
                 }
+                else if(ins.isLoadInstruction())
+                {
+                    load(ins.getLeftResult());
+                    InstructionTORegno.put(ins.getInstructionPC(),ins.getLeftResult().regno);
+                }
             }
 
             optimize(root.getFollowBlock());
